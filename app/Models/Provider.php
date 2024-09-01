@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\ProviderEnum;
 
 class Provider extends Model
 {
@@ -14,5 +15,9 @@ class Provider extends Model
         "provider",
         "id_from_provider",
         "provider_account_profile"
+    ];
+
+    protected $casts = [
+        "provider" => ProviderEnum::class
     ];
 }

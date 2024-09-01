@@ -22,7 +22,8 @@
     },
     "autoload": {
         "files": [
-            "app/Constants.php"
+            "app/Constants.php",
+            "app/Enums/ProviderEnum.php"
         ],
         "psr-4": {
             "App\\": "app/",
