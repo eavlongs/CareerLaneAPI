@@ -17,11 +17,11 @@ return new class extends Migration
             $table->uuid("id")->primary();
             $table->string("title");
             $table->text("description");
-            $table->integer("location");
-            $table->integer("type");
-            $table->double("salary")->nullable();
-            $table->double("salary_start_range")->nullable();
-            $table->double("salary_end_range")->nullable();
+            $table->unsignedSmallInteger("location");
+            $table->unsignedSmallInteger("type");
+            $table->unsignedInteger("salary")->nullable();
+            $table->unsignedInteger("salary_start_range")->nullable();
+            $table->unsignedInteger("salary_end_range")->nullable();
             $table->boolean("is_salary_negotiable");
             $table->timestamp("original_deadline");
             $table->timestamp("extended_deadline")->nullable();
