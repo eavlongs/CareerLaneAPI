@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->uuid("id")->primary();
-            $table->string('email')->unique()->nullable();
+            $table->string('email')->nullable();
             $table->string('password')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
