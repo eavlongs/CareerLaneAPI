@@ -23,7 +23,8 @@
     "autoload": {
         "files": [
             "app/Constants.php",
-            "app/Enums/ProviderEnum.php"
+            "app/Enums/ProviderEnum.php",
+            "app/ResponseHelper.php"
         ],
         "psr-4": {
             "App\\": "app/",
