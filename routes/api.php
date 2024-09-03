@@ -21,12 +21,12 @@ Route::prefix("sessions")->group(function () {
     Route::post("/", [AuthController::class, 'setSession']);
     Route::patch("/{session_id}", [AuthController::class, 'updateSessionExpiration']);
     Route::delete("/{session_id}", [AuthController::class, 'deleteSession']);
-    Route::delete("/{user_id}/sessions", [AuthController::class, 'deleteUserSessions']);
+    Route::delete("/{account_id}/sessions", [AuthController::class, 'deleteUserSessions']);
     Route::delete("/expired", [AuthController::class, 'deleteExpiredSessions']);
 });
 
-Route::prefix("users")->group(function () {
-    Route::get("/{user_id}/sessions", [AuthController::class, 'getUserSessions']);
+Route::prefix("accounts")->group(function () {
+    Route::get("/{account_id}/sessions", [AuthController::class, 'getUserSessions']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

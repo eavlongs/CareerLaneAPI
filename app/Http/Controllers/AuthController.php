@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
@@ -68,20 +69,27 @@ class AuthController extends Controller
         if (!$session) {
             return ResponseHelper::buildErrorResponse("Session not found", 404);
         }
-        $user = User::where('id', $session->user_id)->first();
+        $account = Account::where('id', $session->user_id)->first();
+        if (!$account) {
+            return ResponseHelper::buildErrorResponse("Account not found", 404);
+        }
+
+        $user = User::where('account_id', $account->id)->first();
         if (!$user) {
             return ResponseHelper::buildErrorResponse("User not found", 404);
         }
 
+        // TODO: modify the fields as required
+        $userToBeReturned = [];
         return ResponseHelper::buildSuccessResponse([
             'session' => $session,
-            'user' => $user
+            'user' => $userToBeReturned
         ]);
     }
 
     public function getUserSessions(Request $request)
     {
-        $user_id = $request->user_id;
+        $user_id = $request->account_id;
 
         $user = User::where('id', $user_id)->first();
         if (!$user) {
@@ -105,7 +113,7 @@ class AuthController extends Controller
         ]);
 
         $session = new Session([
-            "user_id" => $request->user_id,
+            "user_id" => $request->account_id,
             "session_id" => $request->session_id,
             "expires_at" => $request->expires_at,
         ]);
@@ -155,12 +163,12 @@ class AuthController extends Controller
             'user_id' => 'required|string',
         ]);
 
-        $user = User::where('id', $request->user_id)->first();
+        $user = User::where('id', $request->account_id)->first();
         if (!$user) {
             return ResponseHelper::buildErrorResponse("User not found", 404);
         }
 
-        $sessions = Session::where('user_id', $request->user_id)->get();
+        $sessions = Session::where('user_id', $request->account_id)->get();
         foreach ($sessions as $session) {
             $session->delete();
         }
