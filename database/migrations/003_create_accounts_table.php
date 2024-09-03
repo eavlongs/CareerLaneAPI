@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
-            $table->string('email')->nullable();
+            $table->string('email')->nullable()->unique();
             $table->string('password')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
