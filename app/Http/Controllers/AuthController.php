@@ -21,7 +21,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -37,7 +37,7 @@ class AuthController extends Controller
             'last_name' => $request->last_name,
             'account_id' => $userAccount->id,
         ]);
-        
+
         return response()->json(['message' => 'User registered successfully']);
     }
 
@@ -99,17 +99,25 @@ class AuthController extends Controller
 
     public function getUserSessions(Request $request)
     {
-        $user_id = $request->account_id;
+        $account_id = $request->account_id;
 
-        $user = User::where('id', $user_id)->first();
+        $account = Account::where('id', $account_id)->first();
+        if (!$account) {
+            return ResponseHelper::buildErrorResponse("Account not found", 404);
+        }
+
+        $user = User::where('account_id', $account->id)->first();
         if (!$user) {
             return ResponseHelper::buildErrorResponse("User not found", 404);
         }
 
-        $sessions = Session::where('user_id', $user_id)->get();
+        $sessions = Session::where('user_id', $account_id)->get();
+
+        // TODO: modify the fields as required
+        $userToBeReturned = [];
 
         return ResponseHelper::buildSuccessResponse([
-            'user' => $user,
+            'user' => $userToBeReturned,
             'sessions' => $sessions
         ]);
     }

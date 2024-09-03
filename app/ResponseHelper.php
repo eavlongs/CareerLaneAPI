@@ -23,4 +23,19 @@ class ResponseHelper extends Controller
             'message' => $message
         ], $status);
     }
+
+    public static function buildNotFoundResponse($message = "Not found")
+    {
+        return self::buildErrorResponse($message, Response::HTTP_NOT_FOUND);
+    }
+
+    public static function buildUnauthorizedResponse($message = "Unauthorized")
+    {
+        return self::buildErrorResponse($message, Response::HTTP_UNAUTHORIZED);
+    }
+
+    public static function buildInternalServerErrorResponse($message = "Internal Server Error")
+    {
+        return self::buildErrorResponse($message, Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
 }
