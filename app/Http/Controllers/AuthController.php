@@ -8,26 +8,36 @@ use App\Models\User;
 use App\ResponseHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
-            'firstname' => 'required|string|max:50',
-            'lastname' => 'required|string|max:50',
-            'email' => 'required|string|email|max:50|unique:users',
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:50',
+            'last_name' => 'required|string|max:50',
+            'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $user = User::create([
-            'firstname' => $request->firstName,
-            'lastname' => $request->lastName,
+        $userAccount = Account::create([
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // dd($userAccount->id);
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'account_id' => $userAccount->id,
+        ]);
+        
         return response()->json(['message' => 'User registered successfully']);
     }
 
@@ -46,7 +56,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return $user->createToken('user-token')->plainTextToken;
+        // return $user->createToken('user-token')->plainTextToken;
     }
 
     public function logout(Request $request)

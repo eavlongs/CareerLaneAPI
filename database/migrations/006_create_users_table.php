@@ -17,10 +17,10 @@ return new class extends Migration
             $table->foreignUuid('account_id')->constrained("accounts")->onDelete('cascade');
             $table->string("first_name");
             $table->string("last_name");
-            $table->string("about_me");
+            $table->string("about_me")->default("");
             $table->string("avatar_url")->nullable();
-            $table->string("job_title");
-            $table->string("job_level");
+            $table->string("job_title")->nullable();
+            $table->string("job_level")->nullable();
             $table->timestamps();
         });
     }
