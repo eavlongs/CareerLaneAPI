@@ -20,6 +20,7 @@ class AuthController extends Controller
             'last_name' => 'required|string|max:50',
             'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
+            'confirm_password' => 'required|string|same:password',
         ]);
 
         if ($validator->fails()) {
