@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -38,25 +39,42 @@ class AuthController extends Controller
             'account_id' => $userAccount->id,
         ]);
 
-        return response()->json(['message' => 'User registered successfully']);
+        return ResponseHelper::buildSuccessResponse([
+            'user_id' => $userAccount->id
+        ]);
     }
 
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
-        ]);
+        ]);   
 
-        $user = User::where('email', $request->email)->first();
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $existingUser = Account::where('email', strtolower($request->email))->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$existingUser) {
+            
+            Hash::make($request->password);
+            return response()->json(['error' => 'Incorrect username or password'], 400);
+        }
+
+        if (!Hash::check($request->password, $existingUser->password)) {
+            return response()->json(['error' => 'Incorrect username or password'], 400);
+        }
+
+        if (! $existingUser || ! Hash::check($request->password, $existingUser ->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        // return $user->createToken('user-token')->plainTextToken;
+        return ResponseHelper::buildSuccessResponse([
+            'user_id' => $existingUser->account_id
+        ]);
     }
 
     public function logout(Request $request)
@@ -79,7 +97,7 @@ class AuthController extends Controller
         if (!$session) {
             return ResponseHelper::buildErrorResponse("Session not found", 404);
         }
-        $account = Account::where('id', $session->user_id)->first();
+        $account = Account::where('id', $session->account_id)->first();
         if (!$account) {
             return ResponseHelper::buildErrorResponse("Account not found", 404);
         }
@@ -124,16 +142,20 @@ class AuthController extends Controller
 
     public function setSession(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|string',
-            'session_id' => 'required|string',
-            'expires_at' => 'required|date',
+        $validator = Validator::make($request->all(),[
+            'userId' => 'required|string',
+            'id' => 'required|string',
+            'expiresAt' => 'required|date',
         ]);
+        // in the database we save as account_id, but lucia sends userId
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $session = new Session([
-            "user_id" => $request->account_id,
-            "session_id" => $request->session_id,
-            "expires_at" => $request->expires_at,
+            "account_id" => $request->userId,
+            "id" => $request->id,
+            "expires_at" => Carbon::parse($request->expiresAt),
         ]);
 
         $session->save();
@@ -148,7 +170,7 @@ class AuthController extends Controller
             'expires_at' => 'required|date',
         ]);
 
-        $session = Session::where('session_id', $request->session_id)->first();
+        $session = Session::where('id', $request->session_id)->first();
         if (!$session) {
             return ResponseHelper::buildErrorResponse("Session not found", 404);
         }

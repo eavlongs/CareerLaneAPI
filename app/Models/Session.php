@@ -11,7 +11,7 @@ class Session extends Model
 
     protected $fillable = [
         "id",
-        "accountId",
-        "expiresAt"
+        "account_id",
+        "expires_at"
     ];
 }
