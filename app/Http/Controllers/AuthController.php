@@ -44,10 +44,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
 
         $user = User::where('email', $request->email)->first();
 
@@ -125,11 +129,15 @@ class AuthController extends Controller
 
     public function setSession(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'user_id' => 'required|string',
             'session_id' => 'required|string',
             'expires_at' => 'required|date',
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
 
         $session = new Session([
             "user_id" => $request->account_id,
@@ -144,10 +152,14 @@ class AuthController extends Controller
 
     public function updateSessionExpiration(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
             'expires_at' => 'required|date',
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
 
         $session = Session::where('session_id', $request->session_id)->first();
         if (!$session) {
@@ -162,9 +174,13 @@ class AuthController extends Controller
 
     public function deleteSession(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
 
         $session = Session::where('session_id', $request->session_id)->first();
         if (!$session) {
@@ -178,9 +194,13 @@ class AuthController extends Controller
 
     public function deleteUserSessions(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'user_id' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
 
         $user = User::where('id', $request->account_id)->first();
         if (!$user) {
