@@ -16,11 +16,12 @@ class ResponseHelper extends Controller
         ], Response::HTTP_OK);
     }
 
-    public static function buildErrorResponse($message = "An error occurred", $status = Response::HTTP_BAD_REQUEST)
+    public static function buildErrorResponse($error = null, $message = "An error occurred", $status = Response::HTTP_BAD_REQUEST)
     {
         return response()->json([
             'success' => false,
-            'message' => $message
+            'message' => $message,
+            'error' => $error
         ], $status);
     }
 
@@ -37,5 +38,10 @@ class ResponseHelper extends Controller
     public static function buildInternalServerErrorResponse($message = "Internal Server Error")
     {
         return self::buildErrorResponse($message, Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    public static function buildValidationErrorResponse($error = null, $message = "Validation Error")
+    {
+        return self::buildErrorResponse($error, $message, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 }
