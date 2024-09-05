@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\ENums\UserTypeEnum;
 use App\Models\Account;
+use App\Models\Company;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
@@ -89,13 +91,32 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse("Account not found", 404);
         }
 
+        $userToBeReturned = [];
+
         $user = User::where('account_id', $account->id)->first();
         if (!$user) {
-            return ResponseHelper::buildErrorResponse("User not found", 404);
+            $company = Company::where('account_id', $account->id)->first();
+            if (!$company) {
+                return ResponseHelper::buildErrorResponse("User not found", 404);
+            }
+            $userToBeReturned = [
+                "id" => $company->id,
+                "account_id" => $company->account_id,
+                "avatar_url" => $company->logo_url,
+                "role" => UserTypeEnum::COMPANY,
+                "company_name" => $company->company_name,
+            ];
         }
 
-        // TODO: modify the fields as required
-        $userToBeReturned = [];
+        $userToBeReturned = [
+            "id" => $user->id,
+            "account_id" => $user->account_id,
+            "avatar_url" => $user->avatar_url,
+            "role" => UserTypeEnum::USER,
+            "first_name" => $user->first_name,
+            "last_name" => $user->last_name,
+        ];
+
         return ResponseHelper::buildSuccessResponse([
             'session' => $session,
             'user' => $userToBeReturned
@@ -111,15 +132,33 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse("Account not found", 404);
         }
 
+        $userToBeReturned = [];
+
         $user = User::where('account_id', $account->id)->first();
         if (!$user) {
-            return ResponseHelper::buildErrorResponse("User not found", 404);
+            $company = Company::where('account_id', $account->id)->first();
+            if (!$company) {
+                return ResponseHelper::buildErrorResponse("User not found", 404);
+            }
+            $userToBeReturned = [
+                "id" => $company->id,
+                "account_id" => $company->account_id,
+                "avatar_url" => $company->logo_url,
+                "role" => UserTypeEnum::COMPANY,
+                "company_name" => $company->company_name,
+            ];
         }
 
-        $sessions = Session::where('user_id', $account_id)->get();
+        $userToBeReturned = [
+            "id" => $user->id,
+            "account_id" => $user->account_id,
+            "avatar_url" => $user->avatar_url,
+            "role" => UserTypeEnum::USER,
+            "first_name" => $user->first_name,
+            "last_name" => $user->last_name,
+        ];
 
-        // TODO: modify the fields as required
-        $userToBeReturned = [];
+        $sessions = Session::where('user_id', $account_id)->get();
 
         return ResponseHelper::buildSuccessResponse([
             'user' => $userToBeReturned,
