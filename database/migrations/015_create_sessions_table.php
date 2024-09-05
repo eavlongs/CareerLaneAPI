@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('sessions', function (Blueprint $table) {
             $table->string("id")->primary();
-            $table->foreignUuid("accountId")->constrained("accounts")->onDelete("cascade");
-            $table->timestamp("expiresAt");
+            $table->foreignUuid("account_id")->constrained("accounts")->onDelete("cascade");
+            $table->datetime("expires_at");
             $table->timestamps();
         });
     }
