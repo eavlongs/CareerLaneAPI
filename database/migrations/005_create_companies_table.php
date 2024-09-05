@@ -15,15 +15,15 @@ return new class extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
             $table->string("name");
-            $table->text("description");
-            $table->string("logo_url")->nullable();
+            $table->text("description")->nullable()->default(null);
+            $table->string("logo_url")->nullable()->default(null);
             // links = {
             //     "title": sring;
             //     "url": string;
             // }[]
-            $table->text("links");
+            $table->text("links")->nullable()->default(null);
             $table->foreignUuid("account_id")->constrained("accounts")->onDelete("cascade");
-            $table->foreignUuid("province_id")->constrained("provinces");
+            $table->foreignUuid("province_id")->nullable()->default(null)->constrained("provinces");
             $table->timestamps();
         });
     }

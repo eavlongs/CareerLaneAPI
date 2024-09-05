@@ -13,6 +13,9 @@ class Company extends Model
     protected $fillable = [
         "name",
         "description",
+        "account_id",
+        "links",
+        "logo_url",
     ];
 
     protected $casts = [

@@ -18,9 +18,10 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
+        $lowerCasedEmail = strtolower($request->email);
+        $validator = Validator::make([...$request->all(), "email" => $lowerCasedEmail], [
+            'first_name' => 'required|string|min:1|max:50',
+            'last_name' => 'required|string|min:1|max:50',
             'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
             'confirm_password' => 'required|string|same:password',
@@ -31,11 +32,11 @@ class AuthController extends Controller
         }
 
         $userAccount = Account::create([
-            'email' => $request->email,
+            'email' => $lowerCasedEmail,
             'password' => Hash::make($request->password),
         ]);
 
-        // dd($userAccount->id);
+
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -43,7 +44,36 @@ class AuthController extends Controller
         ]);
 
         return ResponseHelper::buildSuccessResponse([
-            'user_id' => $userAccount->id
+            'account_id' => $userAccount->id
+        ]);
+    }
+
+    public function registerCompany(Request $request)
+    {
+        $lowerCasedEmail = strtolower($request->email);
+        $validator = Validator::make([...$request->all(), "email" => $lowerCasedEmail], [
+            'company_name' => 'required|string|min:1|max:50',
+            'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
+            'password' => 'required|string|min:8',
+            'confirm_password' => 'required|string|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $companyAccount = Account::create([
+            'email' => $lowerCasedEmail,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $company = Company::create([
+            'name' => $request->company_name,
+            'account_id' => $companyAccount->id,
+        ]);
+
+        return ResponseHelper::buildSuccessResponse([
+            'account_id' => $companyAccount->id
         ]);
     }
 
@@ -58,29 +88,25 @@ class AuthController extends Controller
             return ResponseHelper::buildValidationErrorResponse($validator->errors());
         }
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        $existingUser = Account::where('email', strtolower($request->email))->first();
+        $existingAccount = Account::where('email', strtolower($request->email))->first();
 
-        if (!$existingUser) {
-
+        if (!$existingAccount) {
             Hash::make($request->password);
             return response()->json(['error' => 'Incorrect username or password'], 400);
         }
 
-        if (!Hash::check($request->password, $existingUser->password)) {
+        if (!Hash::check($request->password, $existingAccount->password)) {
             return response()->json(['error' => 'Incorrect username or password'], 400);
         }
 
-        if (! $existingUser || ! Hash::check($request->password, $existingUser->password)) {
+        if (! $existingAccount || ! Hash::check($request->password, $existingAccount->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
         return ResponseHelper::buildSuccessResponse([
-            'user_id' => $existingUser->id
+            'account_id' => $existingAccount->id
         ]);
     }
 
@@ -126,16 +152,16 @@ class AuthController extends Controller
                 "role" => UserTypeEnum::COMPANY,
                 "company_name" => $company->company_name,
             ];
+        } else {
+            $userToBeReturned = [
+                "id" => $user->id,
+                "account_id" => $user->account_id,
+                "avatar_url" => $user->avatar_url,
+                "role" => UserTypeEnum::USER,
+                "first_name" => $user->first_name,
+                "last_name" => $user->last_name,
+            ];
         }
-
-        $userToBeReturned = [
-            "id" => $user->id,
-            "account_id" => $user->account_id,
-            "avatar_url" => $user->avatar_url,
-            "role" => UserTypeEnum::USER,
-            "first_name" => $user->first_name,
-            "last_name" => $user->last_name,
-        ];
 
         return ResponseHelper::buildSuccessResponse([
             'session' => $session,
@@ -167,16 +193,16 @@ class AuthController extends Controller
                 "role" => UserTypeEnum::COMPANY,
                 "company_name" => $company->company_name,
             ];
+        } else {
+            $userToBeReturned = [
+                "id" => $user->id,
+                "account_id" => $user->account_id,
+                "avatar_url" => $user->avatar_url,
+                "role" => UserTypeEnum::USER,
+                "first_name" => $user->first_name,
+                "last_name" => $user->last_name,
+            ];
         }
-
-        $userToBeReturned = [
-            "id" => $user->id,
-            "account_id" => $user->account_id,
-            "avatar_url" => $user->avatar_url,
-            "role" => UserTypeEnum::USER,
-            "first_name" => $user->first_name,
-            "last_name" => $user->last_name,
-        ];
 
         $sessions = Session::where('user_id', $account_id)->get();
 
