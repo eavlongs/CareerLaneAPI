@@ -24,6 +24,8 @@
         "files": [
             "app/Constants.php",
             "app/Enums/ProviderEnum.php",
+            "app/Enums/JobTypeEnum.php",
+            "app/Enums/LocationEnum.php",
             "app/ResponseHelper.php"
         ],
         "psr-4": {
