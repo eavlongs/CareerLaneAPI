@@ -78,7 +78,7 @@ class AuthController extends Controller
         }
 
         return ResponseHelper::buildSuccessResponse([
-            'user_id' => $existingUser->account_id
+            'user_id' => $existingUser->id
         ]);
     }
 
@@ -99,9 +99,11 @@ class AuthController extends Controller
     {
         $session_id = $request->session_id;
         $session = Session::where('id', $session_id)->first();
+
         if (!$session) {
             return ResponseHelper::buildErrorResponse("Session not found", 404);
         }
+
         $account = Account::where('id', $session->account_id)->first();
         if (!$account) {
             return ResponseHelper::buildErrorResponse("Account not found", 404);
@@ -112,8 +114,9 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse("User not found", 404);
         }
 
+
         // TODO: modify the fields as required
-        $userToBeReturned = [];
+        $userToBeReturned = ["id" => "id"];
         return ResponseHelper::buildSuccessResponse([
             'session' => $session,
             'user' => $userToBeReturned
@@ -137,7 +140,7 @@ class AuthController extends Controller
         $sessions = Session::where('user_id', $account_id)->get();
 
         // TODO: modify the fields as required
-        $userToBeReturned = [];
+        $userToBeReturned = ["id" => "id"];
 
         return ResponseHelper::buildSuccessResponse([
             'user' => $userToBeReturned,
@@ -148,9 +151,9 @@ class AuthController extends Controller
     public function setSession(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|string',
-            'session_id' => 'required|string',
-            'expires_at' => 'required|date',
+            'userId' => 'required|string',
+            'id' => 'required|string',
+            'expiresAt' => 'required|date',
         ]);
 
         if ($validator->fails()) {
@@ -160,7 +163,7 @@ class AuthController extends Controller
         $session = new Session([
             "account_id" => $request->userId,
             "id" => $request->id,
-            "expires_at" => Carbon::parse($request->expiresAt),
+            "expires_at" => Carbon::parse($request->expiresAt)
         ]);
 
         $session->save();
@@ -192,15 +195,7 @@ class AuthController extends Controller
 
     public function deleteSession(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'session_id' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return ResponseHelper::buildValidationErrorResponse($validator->errors());
-        }
-
-        $session = Session::where('session_id', $request->session_id)->first();
+        $session = Session::where('id', $request->session_id)->first();
         if (!$session) {
             return ResponseHelper::buildErrorResponse("Session not found", 404);
         }
@@ -212,14 +207,6 @@ class AuthController extends Controller
 
     public function deleteUserSessions(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return ResponseHelper::buildValidationErrorResponse($validator->errors());
-        }
-
         $user = User::where('id', $request->account_id)->first();
         if (!$user) {
             return ResponseHelper::buildErrorResponse("User not found", 404);
