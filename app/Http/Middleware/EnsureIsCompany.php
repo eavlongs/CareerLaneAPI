@@ -34,6 +34,8 @@ class EnsureIsCompany
         if (!$company) {
             return ResponseHelper::buildUnauthorizedResponse();
         }
+
+        $request->merge(["_auth_company_id" => $company->id]);
         return $next($request);
     }
 }

@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\JobController;
+use App\Http\Middleware\EnsureIsCompany;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +25,13 @@ Route::prefix("sessions")->group(function () {
     Route::delete("/{session_id}", [AuthController::class, 'deleteSession']);
     Route::delete("/{account_id}/sessions", [AuthController::class, 'deleteUserSessions']);
     Route::delete("/expired", [AuthController::class, 'deleteExpiredSessions']);
+});
+
+Route::prefix("jobs")->group(function () {
+    Route::middleware([EnsureIsCompany::class])->group(function () {
+        Route::post("/", [JobController::class, 'createJob']);
+    });
+    Route::get("/categories", [JobController::class, "getJobCategories"]);
 });
 
 Route::prefix("accounts")->group(function () {

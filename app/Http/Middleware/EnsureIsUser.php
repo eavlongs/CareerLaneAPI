@@ -35,6 +35,8 @@ class EnsureIsUser
             return ResponseHelper::buildUnauthorizedResponse();
         }
 
+        $request->merge(["_auth_user_id" => $user->id]);
+
         return $next($request);
     }
 }

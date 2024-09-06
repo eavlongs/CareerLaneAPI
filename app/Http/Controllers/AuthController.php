@@ -150,7 +150,7 @@ class AuthController extends Controller
                 "account_id" => $company->account_id,
                 "avatar_url" => $company->logo_url,
                 "role" => UserTypeEnum::COMPANY,
-                "company_name" => $company->company_name,
+                "company_name" => $company->name,
             ];
         } else {
             $userToBeReturned = [
@@ -191,7 +191,7 @@ class AuthController extends Controller
                 "account_id" => $company->account_id,
                 "avatar_url" => $company->logo_url,
                 "role" => UserTypeEnum::COMPANY,
-                "company_name" => $company->company_name,
+                "company_name" => $company->name,
             ];
         } else {
             $userToBeReturned = [

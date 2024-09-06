@@ -9,6 +9,7 @@ enum JobTypeEnum: int
     case INTERNSHIP = 2;
     case CONTRACT = 3;
     case TEMPORARY = 4;
+    case _LENGTH = 5;
 
     public static function toArray(): array
     {
