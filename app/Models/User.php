@@ -24,6 +24,7 @@ class User extends Authenticatable
         "last_name",
         "account_id",
         "about_me",
+        "avatar_url",
         "job_title",
         "job_level"
     ];
