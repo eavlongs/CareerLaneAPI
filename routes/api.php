@@ -34,6 +34,10 @@ Route::prefix("jobs")->group(function () {
     Route::get("/categories", [JobController::class, "getJobCategories"]);
 });
 
+Route::prefix("companies")->group(function () {
+    Route::get("/{company_id}/jobs", [JobController::class, 'getCompanyJobs']);
+});
+
 Route::prefix("accounts")->group(function () {
     Route::get("/{account_id}/sessions", [AuthController::class, 'getUserSessions']);
 });
