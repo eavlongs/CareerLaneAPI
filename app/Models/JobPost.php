@@ -24,6 +24,7 @@ class JobPost extends Model
         'original_deadline',
         'extended_deadline',
         'applicants',
+        'is_active',
         'company_id',
         'category_id',
     ];

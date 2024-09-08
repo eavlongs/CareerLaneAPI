@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\JobTypeEnum;
 use App\Enums\LocationEnum;
 use App\Models\Category;
+use App\Models\Company;
 use App\Models\JobPost;
 use App\ResponseHelper;
 use Illuminate\Http\Request;
@@ -65,6 +66,27 @@ class JobController extends Controller
         ]);
 
         return ResponseHelper::buildSuccessResponse();
+    }
+
+    public function getCompanyJobs(Request $request)
+    {
+        $isActive = $request->get("is_active", true);
+        $company_id = $request->company_id;
+
+        $company = Company::where("id", $company_id)->first();
+
+        if (!$company) {
+            return ResponseHelper::buildErrorResponse("Company not found");
+        }
+
+        $jobs = JobPost::where("company_id", $company_id)
+            ->where("is_active", $isActive)
+            ->orderBy("created_at", "desc")
+            ->get();
+
+        return ResponseHelper::buildSuccessResponse([
+            "jobs" => $jobs
+        ]);
     }
 
     public function getJobCategories(Request $request)
