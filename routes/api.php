@@ -47,3 +47,5 @@ Route::post("/register-company", [AuthController::class, 'registerCompany']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/user', [AuthController::class, 'user']);
+
+Route::post('/login/provider', [AuthController::class, 'loginProvider']);

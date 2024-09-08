@@ -18,7 +18,7 @@ return new class extends Migration
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
             $table->integer('provider');
             $table->string('id_from_provider');
-            $table->string("provider_account_profile");
+            $table->string("provider_account_profile")->nullable();
             $table->timestamps();
         });
     }

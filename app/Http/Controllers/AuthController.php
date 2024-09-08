@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProviderEnum;
 use App\ENums\UserTypeEnum;
 use App\Models\Account;
+use App\Models\AccountProvider;
 use App\Models\Company;
+use App\Models\Provider;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
@@ -112,9 +115,85 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return ResponseHelper::buildSuccessResponse();
+    }
+
+    public function loginProvider(Request $request){
+        
+        $validator = Validator::make($request->all(), [
+            'provider' => 'required|int', // value must be in ProviderEnum range
+            'provider_id' => 'required|string', // limit length
+            'avatar_url' => 'required|url', 
+            'first_name' => 'required|string',
+            'last_name' => 'string', // if send null from frontend, error
+            'provider_account_profile' => 'string'// limit length
+            // more data about user like name
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422); // use ResponseHelper
+        }
+
+        $existingProvider = Provider::where('provider', $request->provider) // check provider = $request->provider
+                ->where('id_from_provider', $request->provider_id) // check provider_id = $request->provider_id
+                ->first();
+
+        if ($existingProvider) {
+            $existingAccountProvider = AccountProvider::where('provider_id', $existingProvider->id)->first();
+
+            // just in case provider exists, but AccountProvider doesn't exist
+
+            if ($existingAccountProvider) {
+                return ResponseHelper::buildSuccessResponse([
+                    'account_id' => $existingAccountProvider->account_id
+                ]);
+            };
+
+            $account = Account::create();
+
+            $accountProvider = AccountProvider::create([
+                'account_id' => $account->id,
+                'provider_id' => $existingProvider->id,
+            ]);
+
+            // TODO: create user
+            $user = User::create([
+                'account_id' => $account->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'avatar_url' => $request->avatar_url,
+            ]);
+
+            return ResponseHelper::buildSuccessResponse([
+                'account_id' => $account->id
+            ]);
+        }
+        
+        $provider = Provider::create([
+            'provider' => $request->provider,
+            'id_from_provider' => $request->provider_id,
+            'provider_account_profile' => $request->provider_account_profile,
+        ]);
+
+        $account = Account::create();
+
+        $account_provider = AccountProvider::create([
+            'account_id' => $account->id,
+            'provider_id' => $provider->id,
+        ]);
+
+        // TODO: create user
+        $user = User::create([
+            'account_id' => $account->id,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'avatar_url' => $request->avatar_url,
+        ]);
+
+        return ResponseHelper::buildSuccessResponse([
+            'account_id' => $account->id
+        ]);
     }
 
     public function user(Request $request)

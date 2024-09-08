@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
             $table->foreignUuid('account_id')->constrained("accounts")->onDelete('cascade');
             $table->string("first_name");
-            $table->string("last_name");
+            $table->string("last_name")->nullable();
             $table->string("about_me")->default("");
             $table->string("avatar_url")->nullable();
             $table->string("job_title")->nullable();
