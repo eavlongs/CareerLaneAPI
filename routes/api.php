@@ -30,8 +30,11 @@ Route::prefix("sessions")->group(function () {
 Route::prefix("jobs")->group(function () {
     Route::middleware([EnsureIsCompany::class])->group(function () {
         Route::post("/", [JobController::class, 'createJob']);
+        Route::patch("/{id}/inactive", [JobController::class, 'markJobAsInactive']);
+        Route::patch("/{id}", [JobController::class, 'updateJob']);
     });
     Route::get("/categories", [JobController::class, "getJobCategories"]);
+    Route::get("/{id}", [JobController::class, 'getJob']);
 });
 
 Route::prefix("companies")->group(function () {
