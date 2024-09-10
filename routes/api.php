@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobController;
 use App\Http\Middleware\EnsureIsCompany;
 
@@ -35,10 +34,12 @@ Route::prefix("jobs")->group(function () {
     });
     Route::get("/categories", [JobController::class, "getJobCategories"]);
     Route::get("/{id}", [JobController::class, 'getJob']);
+    Route::get("/", [JobController::class, 'getJobs']);
 });
 
 Route::prefix("companies")->group(function () {
     Route::get("/{company_id}/jobs", [JobController::class, 'getCompanyJobs']);
+    Route::get("/featured", [CompanyController::class, 'getFeaturedCompanies']);
 });
 
 Route::prefix("accounts")->group(function () {

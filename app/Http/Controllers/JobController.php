@@ -7,7 +7,9 @@ use App\Enums\LocationEnum;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPost;
+use App\RequestHelper;
 use App\ResponseHelper;
+use App\QueryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -190,6 +192,39 @@ class JobController extends Controller
                 "created_at" => $job->created_at,
                 "updated_at" => $job->updated_at,
             ]
+        ]);
+    }
+
+    public function getJobs(Request $request)
+    {
+        $query = $request->query("q", "");
+        $paginationParams = RequestHelper::getPaginationParams($request);
+        $sortParams = RequestHelper::getSortParams($request, new JobPost());
+        $filterParams = RequestHelper::getFilterParams($request, ["c_id", "location", "type", "min_salary"]);
+
+        // return $sortParams;
+        $queryBuilder = JobPost::query();
+
+        QueryHelper::filter($queryBuilder, $filterParams, [
+            "c_id|company_id|=",
+            "location|location|=",
+            "type|type|=",
+            "min_salary|salary|>="
+        ]);
+
+        $queryBuilder->where(function ($_queryBuilder) use ($query) {
+            $_queryBuilder->whereRaw("title LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
+            $_queryBuilder->orWhereRaw("description LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
+        });
+
+        QueryHelper::sort($queryBuilder, $sortParams);
+        $metaData = QueryHelper::paginate($queryBuilder, $paginationParams);
+
+        $jobs = $queryBuilder->get();
+
+        return ResponseHelper::buildSuccessResponse([
+            "jobs" => $jobs,
+            "meta" => $metaData
         ]);
     }
 
