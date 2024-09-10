@@ -26,6 +26,7 @@ return new class extends Migration
             $table->boolean("is_salary_negotiable");
             $table->timestamp("original_deadline");
             $table->timestamp("extended_deadline")->nullable();
+            $table->boolean("is_active")->default(true);
             $table->unsignedInteger("applicants")->default(0);
             $table->foreignUuid("company_id")->constrained("companies");
             $table->foreignUuid("category_id")->constrained("categories");

@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JobController;
 use App\Http\Middleware\EnsureIsCompany;
 
@@ -30,8 +29,17 @@ Route::prefix("sessions")->group(function () {
 Route::prefix("jobs")->group(function () {
     Route::middleware([EnsureIsCompany::class])->group(function () {
         Route::post("/", [JobController::class, 'createJob']);
+        Route::patch("/{id}/inactive", [JobController::class, 'markJobAsInactive']);
+        Route::patch("/{id}", [JobController::class, 'updateJob']);
     });
     Route::get("/categories", [JobController::class, "getJobCategories"]);
+    Route::get("/{id}", [JobController::class, 'getJob']);
+    Route::get("/", [JobController::class, 'getJobs']);
+});
+
+Route::prefix("companies")->group(function () {
+    Route::get("/{company_id}/jobs", [JobController::class, 'getCompanyJobs']);
+    Route::get("/featured", [CompanyController::class, 'getFeaturedCompanies']);
 });
 
 Route::prefix("accounts")->group(function () {

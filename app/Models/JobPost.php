@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\JobTypeEnum;
 use App\Enums\LocationEnum;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JobPost extends Model
 {
@@ -24,12 +25,20 @@ class JobPost extends Model
         'original_deadline',
         'extended_deadline',
         'applicants',
+        'is_active',
         'company_id',
         'category_id',
+        'created_at',
+        'updated_at'
     ];
 
     protected $casts = [
         "type" => JobTypeEnum::class,
         "location" => LocationEnum::class
     ];
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 }
