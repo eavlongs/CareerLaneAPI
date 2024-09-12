@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProviderEnum;
 use App\ENums\UserTypeEnum;
+use App\Mail\TestEmail;
 use App\FileHelper;
 use App\Models\Account;
 use App\Models\AccountProvider;
 use App\Models\Company;
+use App\Models\EmailVerifyToken;
 use App\Models\Provider;
 use App\Models\Session;
 use App\Models\User;
@@ -15,6 +17,7 @@ use App\ResponseHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -210,6 +213,39 @@ class AuthController extends Controller
         return $request->user();
     }
 
+    public function sendEmail()
+    {
+        $name = "Eavlong";
+        Mail::to('esok@paragoniu.edu.kh')->send(new TestEmail($name));
+        return 'Test email sent!';
+    }
+    public function sendVerificationEmail(Request $request)
+    {
+        $account = $request->user(); // Assuming the user is authenticated
+
+        // Generate a unique token
+        $token = str()->random(60);
+
+        // Store the token in the database
+        $emailVerifyToken =  EmailVerifyToken::create([
+            'token' => $token,
+            'account_id' => $account->id,
+            'created_at' => now(),
+            'expired_at' => now()->addHours(24), // Token valid for 24 hours
+        ]);
+
+        // Send the verification email with the token link
+        $verificationLink = route('verify.email', ['token' => $token]);
+
+        Mail::send('emails.verify', ['link' => $verificationLink], function ($message) use ($account) {
+            $message->to($account->email);
+            $message->subject('Verify your email');
+        });
+
+        return response()->json(['message' => 'Verification email sent!'], 200);
+    }
+
+
     // functions required by Lucia
     public function getSessionAndUser(Request $request)
     {
@@ -256,6 +292,8 @@ class AuthController extends Controller
             'user' => $userToBeReturned
         ]);
     }
+
+
 
     public function getUserSessions(Request $request)
     {

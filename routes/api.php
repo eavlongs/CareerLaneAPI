@@ -58,3 +58,5 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/user', [AuthController::class, 'user']);
 
 Route::post('/login/provider', [AuthController::class, 'loginProvider']);
+
+Route::get('/test_email', [AuthController::class, 'sendEmail']);
