@@ -12,6 +12,11 @@ class ProvincesSeeder extends Seeder
      */
     public function run(): void
     {
+        self::seed();
+    }
+
+    public static function seed()
+    {
         $provinces = [
             ['name' => 'Banteay Meanchey'],
             ['name' => 'Battambang'],

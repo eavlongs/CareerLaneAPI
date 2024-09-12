@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProviderEnum;
 use App\ENums\UserTypeEnum;
+use App\FileHelper;
 use App\Models\Account;
 use App\Models\AccountProvider;
 use App\Models\Company;
@@ -59,6 +60,8 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
             'confirm_password' => 'required|string|same:password',
+            'logo' => 'required|image|mimes:jepg,jpg,png,webp|max:20480',
+            'province' => 'required|string|min:1|max:255'
         ]);
 
         if ($validator->fails()) {
@@ -70,9 +73,14 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $logo = $request->file('logo');
+        $logoFileName = FileHelper::saveFile($logo);
+
         $company = Company::create([
             'name' => $request->company_name,
             'account_id' => $companyAccount->id,
+            'logo_url' => $logoFileName,
+            'province_id' => $request->province,
         ]);
 
         return ResponseHelper::buildSuccessResponse([
@@ -119,15 +127,16 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse();
     }
 
-    public function loginProvider(Request $request){
-        
+    public function loginProvider(Request $request)
+    {
+
         $validator = Validator::make($request->all(), [
             'provider' => 'required|int', // value must be in ProviderEnum range
             'provider_id' => 'required|string', // limit length
-            'avatar_url' => 'required|url', 
+            'avatar_url' => 'required|url',
             'first_name' => 'required|string',
             'last_name' => 'string', // if send null from frontend, error
-            'provider_account_profile' => 'string'// limit length
+            'provider_account_profile' => 'string' // limit length
             // more data about user like name
         ]);
 
@@ -136,8 +145,8 @@ class AuthController extends Controller
         }
 
         $existingProvider = Provider::where('provider', $request->provider) // check provider = $request->provider
-                ->where('id_from_provider', $request->provider_id) // check provider_id = $request->provider_id
-                ->first();
+            ->where('id_from_provider', $request->provider_id) // check provider_id = $request->provider_id
+            ->first();
 
         if ($existingProvider) {
             $existingAccountProvider = AccountProvider::where('provider_id', $existingProvider->id)->first();
@@ -169,7 +178,7 @@ class AuthController extends Controller
                 'account_id' => $account->id
             ]);
         }
-        
+
         $provider = Provider::create([
             'provider' => $request->provider,
             'id_from_provider' => $request->provider_id,

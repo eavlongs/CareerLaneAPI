@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\GeneralController;
 use App\Http\Controllers\JobController;
 use App\Http\Middleware\EnsureIsCompany;
 
@@ -40,6 +41,10 @@ Route::prefix("jobs")->group(function () {
 Route::prefix("companies")->group(function () {
     Route::get("/{company_id}/jobs", [JobController::class, 'getCompanyJobs']);
     Route::get("/featured", [CompanyController::class, 'getFeaturedCompanies']);
+});
+
+Route::prefix("provinces")->group(function () {
+    Route::get("/", [GeneralController::class, 'getProvinces']);
 });
 
 Route::prefix("accounts")->group(function () {

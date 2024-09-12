@@ -27,6 +27,7 @@
             "app/Enums/JobTypeEnum.php",
             "app/Enums/LocationEnum.php",
             "app/Enums/UserTypeEnum.php",
+            "app/FileHelper.php",
             "app/RequestHelper.php",
             "app/ResponseHelper.php",
             "app/QueryHelper.php"
