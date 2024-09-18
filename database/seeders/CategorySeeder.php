@@ -13,6 +13,11 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        self::seed();
+    }
+
+    public static function seed()
+    {
         $categories = [
             ["name" => "Software Development"],
             ["name" => "Data Science"],
