@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Test\Constraint\ResponseHeaderLocationSame;
 
 class AuthController extends Controller
 {
@@ -77,6 +78,14 @@ class AuthController extends Controller
             'name' => $request->company_name,
             'account_id' => $companyAccount->id,
         ]);
+        $token = str()->random(60);
+        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+        $emailVerifyToken =  EmailVerifyToken::create([
+            'token' => $token,
+            'account_id' => $companyAccount->id,
+            'expires_at' => $expiresAt,
+        ]);
+
 
         return ResponseHelper::buildSuccessResponse([
             'account_id' => $companyAccount->id
@@ -204,35 +213,46 @@ class AuthController extends Controller
         return $request->user();
     }
 
-    public function sendEmail(){
-        $name = "Eavlong";
-        Mail::to('esok@paragoniu.edu.kh')->send(new TestEmail($name));
-        return 'Test email sent!';
-    }
-    public function sendVerificationEmail(Request $request)
+    public function sendEmail(Request $request)
 {
-    $account = $request->user(); // Assuming the user is authenticated
+    $session = Session::where('id', $request->session_id)->first();
+    $account = $session->account_id;
+    $accountVerify = EmailVerifyToken::where('account_id', $account)->first();
+    $token = $accountVerify->token;
 
-    // Generate a unique token
-    $token = str()->random(60);
-
-    // Store the token in the database
-    $emailVerifyToken =  EmailVerifyToken::create([
-        'token' => $token,
-        'account_id' => $account->id,
-        'created_at' => now(),
-        'expired_at' => now()->addHours(24), // Token valid for 24 hours
-    ]);
-
-    // Send the verification email with the token link
-    $verificationLink = route('verify.email', ['token' => $token]);
     
-    Mail::send('emails.verify', ['link' => $verificationLink], function ($message) use ($account) {
-        $message->to($account->email);
-        $message->subject('Verify your email');
-    });
+    $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
 
-    return response()->json(['message' => 'Verification email sent!'], 200);
+    Mail::to('zhoubovisal@gmail.com')->send(new TestEmail($verificationUrl));
+
+    return ResponseHelper::buildSuccessResponse();
+}
+    public function verifyToken(Request $request)
+{
+    $token = $request->query('token');
+
+        if (!$token) {
+            return ResponseHelper::buildErrorResponse();
+        }
+
+        $emailVerifyToken = EmailVerifyToken::where('token', $token)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
+        if (!$emailVerifyToken) {
+            $token = str()->random(60);
+            $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+            $emailVerifyToken =  EmailVerifyToken::create([
+            'token' => $token,
+            'account_id' => $companyAccount->id,
+            'expires_at' => $expiresAt,
+        ]);
+            return ResponseHelper::buildErrorResponse();
+        }
+
+        // return ResponseHelper::buildSuccessResponse();
+        return ResponseHelper::buildSuccessResponse();
+
 }
 
 

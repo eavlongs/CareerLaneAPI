@@ -10,6 +10,8 @@ class EmailVerifyToken extends Model
     use HasFactory;
 
     protected $fillable = [
+        "token",
         "account_id",
+        "expires_at",
     ];
 }

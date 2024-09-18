@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_verified_tokens', function (Blueprint $table) {
+        Schema::create('email_verify_tokens', function (Blueprint $table) {
             $table->string('token')->primary();
             $table->foreignUuid('account_id')->constrained('accounts')->onDelete('cascade');
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }

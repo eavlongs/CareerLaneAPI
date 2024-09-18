@@ -54,4 +54,5 @@ Route::get('/user', [AuthController::class, 'user']);
 
 Route::post('/login/provider', [AuthController::class, 'loginProvider']);
 
-Route::get('/test_email', [AuthController::class, 'sendEmail']);
+Route::post('/test-email', [AuthController::class, 'sendEmail']);
+Route::post('/verify-token', [AuthController::class, 'verifyToken']);

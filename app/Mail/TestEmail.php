@@ -21,7 +21,7 @@ class TestEmail extends Mailable
     //     return $this->subject('Test Email')->view("email.test");
     // }
 
-    public function __construct(private string $name)
+    public function __construct(private string $verificationUrl)
     {
         //
     }
@@ -43,7 +43,7 @@ class TestEmail extends Mailable
     {
         return new Content(
             view: 'email.test',
-            with: ['name' => $this->name]
+            with: ['verificationUrl' => $this->verificationUrl]
         );
     }
 
