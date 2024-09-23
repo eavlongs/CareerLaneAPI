@@ -215,22 +215,22 @@ class AuthController extends Controller
     }
 
     public function sendEmail(Request $request)
-{
-    $session = Session::where('id', $request->session_id)->first();
-    $account = $session->account_id;
-    $accountVerify = EmailVerifyToken::where('account_id', $account)->first();
-    $token = $accountVerify->token;
+    {
+        $session = Session::where('id', $request->session_id)->first();
+        $account = $session->account_id;
+        $accountVerify = EmailVerifyToken::where('account_id', $account)->first();
+        $token = $accountVerify->token;
 
-    
-    $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
 
-    Mail::to('zhoubovisal@gmail.com')->send(new TestEmail($verificationUrl));
+        $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
 
-    return ResponseHelper::buildSuccessResponse();
-}
+        Mail::to('zhoubovisal@gmail.com')->send(new TestEmail($verificationUrl));
+
+        return ResponseHelper::buildSuccessResponse();
+    }
     public function verifyToken(Request $request)
-{
-    $token = $request->query('token');
+    {
+        $token = $request->query('token');
 
         if (!$token) {
             return ResponseHelper::buildErrorResponse();
@@ -244,23 +244,22 @@ class AuthController extends Controller
             $token = str()->random(60);
             $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
             $emailVerifyToken =  EmailVerifyToken::create([
-            'token' => $token,
-            'account_id' => $companyAccount->id,
-            'expires_at' => $expiresAt,
-        ]);
+                'token' => $token,
+                'account_id' => $companyAccount->id,
+                'expires_at' => $expiresAt,
+            ]);
             return ResponseHelper::buildErrorResponse();
         }
 
         // return ResponseHelper::buildSuccessResponse();
         return ResponseHelper::buildSuccessResponse();
-
-}
-    public function sendEmail()
-    {
-        $name = "Eavlong";
-        Mail::to('esok@paragoniu.edu.kh')->send(new TestEmail($name));
-        return 'Test email sent!';
     }
+    // public function sendEmail()
+    // {
+    //     $name = "Eavlong";
+    //     Mail::to('esok@paragoniu.edu.kh')->send(new TestEmail($name));
+    //     return 'Test email sent!';
+    // }
     public function sendVerificationEmail(Request $request)
     {
         $account = $request->user(); // Assuming the user is authenticated
