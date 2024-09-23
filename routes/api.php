@@ -61,3 +61,4 @@ Route::post('/login/provider', [AuthController::class, 'loginProvider']);
 
 Route::post('/test-email', [AuthController::class, 'sendEmail']);
 Route::post('/verify-token', [AuthController::class, 'verifyToken']);
+Route::post('/change-password', [AuthController::class, 'changePassword']);
