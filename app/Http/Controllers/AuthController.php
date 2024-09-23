@@ -80,12 +80,21 @@ class AuthController extends Controller
         $logo = $request->file('logo');
         $logoFileName = FileHelper::saveFile($logo);
 
+        $token = str()->random(60);
+        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+        $emailVerifyToken =  EmailVerifyToken::create([
+        'token' => $token,
+        'account_id' => $companyAccount->id,
+        'expires_at' => $expiresAt,
+        ]);
         $company = Company::create([
             'name' => $request->company_name,
             'account_id' => $companyAccount->id,
             'logo_url' => $logoFileName,
             'province_id' => $request->province,
         ]);
+
+        
 
         return ResponseHelper::buildSuccessResponse([
             'account_id' => $companyAccount->id
