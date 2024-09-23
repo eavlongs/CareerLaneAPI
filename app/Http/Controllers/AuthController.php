@@ -229,7 +229,6 @@ class AuthController extends Controller
         ]);
 
         $sessionId = $request->cookie('auth_session');
-
         $accountSession = Session::where('id', $sessionId)->first();
 
         $account = Account::where('id', $accountSession->account_id)->first();
@@ -262,7 +261,7 @@ class AuthController extends Controller
         $account = Account::where('id', $account_id)->first();
         $email = $account->email;
 
-        $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
+        $verificationUrl = env('FRONTEND_URL') . '/verify-email/token=' . $token;
 
         Mail::to($email)->send(new TestEmail($verificationUrl));
 
