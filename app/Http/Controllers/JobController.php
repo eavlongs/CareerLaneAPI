@@ -200,10 +200,16 @@ class JobController extends Controller
         $query = $request->query("q", "");
         $paginationParams = RequestHelper::getPaginationParams($request);
         $sortParams = RequestHelper::getSortParams($request, new JobPost());
-        $filterParams = RequestHelper::getFilterParams($request, ["c_id", "location", "type", "min_salary"]);
+        $filterParams = RequestHelper::getFilterParams($request, ["c_id", "location", "type", "min_salary", "p_id"]);
 
         // return $sortParams;
         $queryBuilder = JobPost::query();
+
+        $queryBuilder->join("companies", "job_posts.company_id", "=", "companies.id");
+
+        if (isset($filterParams["p_id"])) {
+            $queryBuilder->where("companies.province_id", $filterParams["p_id"]);
+        }
 
         QueryHelper::filter($queryBuilder, $filterParams, [
             "c_id|company_id|=",
@@ -214,7 +220,7 @@ class JobController extends Controller
 
         $queryBuilder->where(function ($_queryBuilder) use ($query) {
             $_queryBuilder->whereRaw("title LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
-            $_queryBuilder->orWhereRaw("description LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
+            $_queryBuilder->orWhereRaw("job_posts.description LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
         });
 
         QueryHelper::sort($queryBuilder, $sortParams);

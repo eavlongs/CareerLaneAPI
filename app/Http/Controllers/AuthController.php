@@ -123,6 +123,7 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse('Incorrect username or password', 400);
         }
 
+
         if (! $existingAccount || ! Hash::check($request->password, $existingAccount->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
@@ -217,8 +218,9 @@ class AuthController extends Controller
             'account_id' => $account->id
         ]);
     }
-    
-    public function changePassword(Request $request){
+
+    public function changePassword(Request $request)
+    {
 
         $validator = Validator::make($request->all(), [
             'old_password' => 'required|string|min:8',
@@ -232,15 +234,16 @@ class AuthController extends Controller
 
         $account = Account::where('id', $accountSession->account_id)->first();
 
-        if(!Hash::check($request->old_password, $account->password)){
-            return ResponseHelper::buildErrorResponse('Incorrect Password'. 404);
+        if (!Hash::check($request->old_password, $account->password)) {
+            return ResponseHelper::buildErrorResponse('Incorrect Password' . 404);
         }
 
         $account->password = Hash::make($request->new_password);
         $account->save();
 
-        return ResponseHelper::buildSuccessResponse('Password Changed');
 
+
+        return ResponseHelper::buildSuccessResponse('Password Changed');
     }
 
     public function user(Request $request)
@@ -249,49 +252,48 @@ class AuthController extends Controller
     }
 
     public function sendEmail(Request $request)
-{
-    $sessionId = $request->cookie('auth_session');
-    $session = Session::where('id', $sessionId)->first();
-    $account_id = $session->account_id;
-    $accountVerify = EmailVerifyToken::where('account_id', $account_id)->first();
-    $token = $accountVerify->token;
+    {
+        $sessionId = $request->cookie('auth_session');
+        $session = Session::where('id', $sessionId)->first();
+        $account_id = $session->account_id;
+        $accountVerify = EmailVerifyToken::where('account_id', $account_id)->first();
+        $token = $accountVerify->token;
 
-    $account = Account::where('id', $account_id)-> first();
-    $email = $account->email;
-    
-    $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
+        $account = Account::where('id', $account_id)->first();
+        $email = $account->email;
 
-    Mail::to($email)->send(new TestEmail($verificationUrl));
+        $verificationUrl = env('FRONTEND_URL') . '/verify-email?token=' . $token;
 
-    return ResponseHelper::buildSuccessResponse();
-}
+        Mail::to($email)->send(new TestEmail($verificationUrl));
+
+        return ResponseHelper::buildSuccessResponse();
+    }
     public function verifyToken(Request $request)
-{
-    $token = $request->query('token');
+    {
+        $token = $request->query('token');
 
-    if (!$token) {
-        return ResponseHelper::buildErrorResponse('Invalid Token', 404);
+        if (!$token) {
+            return ResponseHelper::buildErrorResponse('Invalid Token', 404);
+        }
+
+        $emailVerifyToken = EmailVerifyToken::where('token', $token)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
+        if (!$emailVerifyToken) {
+            $token = str()->random(60);
+            $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+            $emailVerifyToken =  EmailVerifyToken::create([
+                'token' => $token,
+                'account_id' => $emailVerifyToken->account_id,
+                'expires_at' => $expiresAt,
+            ]);
+            return ResponseHelper::buildErrorResponse("Token is expired", 404);
+        }
+        return ResponseHelper::buildSuccessResponse();
     }
 
-    $emailVerifyToken = EmailVerifyToken::where('token', $token)
-        ->where('expires_at', '>', Carbon::now())
-        ->first();
 
-    if (!$emailVerifyToken) {
-        $token = str()->random(60);
-        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
-        $emailVerifyToken =  EmailVerifyToken::create([
-        'token' => $token,
-        'account_id' => $emailVerifyToken->account_id,
-        'expires_at' => $expiresAt,
-    ]);
-        return ResponseHelper::buildErrorResponse("Token is expired",404);
-    }
-    return ResponseHelper::buildSuccessResponse();
-
-}
-
-    
     // functions required by Lucia
     public function getSessionAndUser(Request $request)
     {
@@ -351,6 +353,8 @@ class AuthController extends Controller
         }
 
         $userToBeReturned = [];
+
+
 
         $user = User::where('account_id', $account->id)->first();
         if (!$user) {
