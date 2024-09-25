@@ -6,16 +6,21 @@ use App\Enums\ProviderEnum;
 use App\ENums\UserTypeEnum;
 use App\Mail\TestEmail;
 use App\FileHelper;
+use App\Mail\ForgotPasswordEmail;
+use App\Mail\ResetPasswordEmail;
 use App\Models\Account;
 use App\Models\AccountProvider;
 use App\Models\Company;
 use App\Models\EmailVerifyToken;
+use App\Models\PasswordForgotToken;
+use App\Models\PasswordResetToken;
 use App\Models\Provider;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -240,8 +245,6 @@ class AuthController extends Controller
         $account->password = Hash::make($request->new_password);
         $account->save();
 
-
-
         return ResponseHelper::buildSuccessResponse('Password Changed');
     }
 
@@ -267,6 +270,7 @@ class AuthController extends Controller
 
         return ResponseHelper::buildSuccessResponse();
     }
+
     public function verifyToken(Request $request)
     {
         $token = $request->query('token');
@@ -282,15 +286,74 @@ class AuthController extends Controller
         if (!$emailVerifyToken) {
             $token = str()->random(60);
             $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
-            $emailVerifyToken =  EmailVerifyToken::create([
-                'token' => $token,
-                'account_id' => $emailVerifyToken->account_id,
-                'expires_at' => $expiresAt,
-            ]);
-            return ResponseHelper::buildErrorResponse("Token is expired", 404);
+            $emailVerifyToken->token = $token;
+            $emailVerifyToken->expires_at = $expiresAt;
+            $emailVerifyToken->save();
+            return ResponseHelper::buildErrorResponse("Token is expired Please Try Again", 404);
         }
         return ResponseHelper::buildSuccessResponse();
     }
+
+    public function sendForgotPasswordEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+        ]);
+        $account = Account::where('email', $request->email)->first();
+        $account_id = $account->id;
+
+        $token = str()->random(60);
+        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+        $passwordForgotToken =  PasswordForgotToken::create([
+        'token' => $token,
+        'account_id' => $account_id,
+        'expires_at' => $expiresAt,
+        ]);
+
+        $forgotPasswordUrl = env('FRONTEND_URL') . '/forgot-password/'. $token;
+
+        Mail::to($request->email)->send(new ForgotPasswordEmail($forgotPasswordUrl));
+
+        return ResponseHelper::buildSuccessResponse();
+    }
+
+    public function verifyForgotPasswordToken(Request $request)
+    {
+        $token = $request->token;
+        if (!$token) {
+            return ResponseHelper::buildErrorResponse('Invalid Token', 404);
+        }
+
+        $passwordForgotToken = PasswordForgotToken::where('token', $token)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
+        if (!$passwordForgotToken) {
+            $token = str()->random(60);
+            $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+            $passwordForgotToken->token = $token;
+            $passwordForgotToken->expires_at = $expiresAt;
+            $passwordForgotToken->save();
+            return ResponseHelper::buildErrorResponse("Token is expired Please Try Again", 404);
+        }
+        return ResponseHelper::buildSuccessResponse();
+    }
+
+    public function forgotPassword(Request $request){
+        $validator = ValidatOR::make($request->all(), [
+            'new_password' => 'required|string|min:8',
+            'new_confirm_password' => 'required|string:same:new_password',
+            'token' => 'required|string',
+        ]);
+        $passwordForgotToken = PasswordForgotToken::where('token', $request->token)->first();
+        $account = Account::where('id', $passwordForgotToken->account_id)->first();
+        $account->password = Hash::make($request->new_password);
+        $account->save();
+
+        return ResponseHelper::buildSuccessResponse();
+    }
+
+    
 
 
     // functions required by Lucia

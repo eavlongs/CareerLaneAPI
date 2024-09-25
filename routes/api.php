@@ -62,3 +62,6 @@ Route::post('/login/provider', [AuthController::class, 'loginProvider']);
 Route::post('/test-email', [AuthController::class, 'sendEmail']);
 Route::post('/verify-token', [AuthController::class, 'verifyToken']);
 Route::post('/change-password', [AuthController::class, 'changePassword']);
+Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
+Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
