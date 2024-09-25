@@ -223,7 +223,9 @@ class JobController extends Controller
             $_queryBuilder->orWhereRaw("job_posts.description LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
         });
 
-        QueryHelper::sort($queryBuilder, $sortParams);
+        QueryHelper::sort($queryBuilder, $sortParams, [
+            "created_at" => "job_posts.created_at",
+        ]);
         $metaData = QueryHelper::paginate($queryBuilder, $paginationParams);
 
         $jobs = $queryBuilder->get();

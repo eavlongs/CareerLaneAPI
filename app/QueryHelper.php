@@ -27,13 +27,16 @@ class QueryHelper
         return $paginationMetaData;
     }
 
-    public static function sort(Builder $queryBuilder, $cleanedSortParams)
+    public static function sort(Builder $queryBuilder, $cleanedSortParams, $paramPrefixMap = [])
     {
         if (empty($cleanedSortParams)) {
             return;
         }
 
         foreach ($cleanedSortParams as $column => $direction) {
+            if (isset($paramPrefixMap[$column])) {
+                $column = $paramPrefixMap[$column];
+            }
             $queryBuilder->orderBy($column, $direction);
         }
     }

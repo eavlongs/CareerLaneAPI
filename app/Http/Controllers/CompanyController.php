@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\ResponseHelper;
+use Illuminate\Http\Request;
 
 class CompanyController extends Controller
 {
@@ -18,4 +19,8 @@ class CompanyController extends Controller
             "companies" => $featuredCompanies
         ]);
     }
+
+    // public function getCompanies(Request $request) {
+
+    // }
 }
