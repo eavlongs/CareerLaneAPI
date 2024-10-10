@@ -160,7 +160,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422); // use ResponseHelper
+            return ResponseHelper::buildErrorResponse(); // use ResponseHelper
         }
 
         $existingProvider = Provider::where('provider', $request->provider) // check provider = $request->provider

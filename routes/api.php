@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GeneralController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureIsCompany;
 
 /*
@@ -51,17 +52,26 @@ Route::prefix("accounts")->group(function () {
     Route::get("/{account_id}/sessions", [AuthController::class, 'getUserSessions']);
 });
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post("/register-company", [AuthController::class, 'registerCompany']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::get('/user', [AuthController::class, 'user']);
 
-Route::post('/login/provider', [AuthController::class, 'loginProvider']);
 
-Route::post('/test-email', [AuthController::class, 'sendEmail']);
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register-company', [AuthController::class, 'registerCompany']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+
+    Route::post('/login/provider', [AuthController::class, 'loginProvider']);
+
+});
+
+Route::post('/send-verification-email', [AuthController::class, 'sendEmail']);
 Route::post('/verify-token', [AuthController::class, 'verifyToken']);
 Route::post('/change-password', [AuthController::class, 'changePassword']);
 Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
 Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+
+Route::get('/user-profile-information', [UserController::class, 'userProfileInformation']);
+Route::post('/edit-user-profile', [UserController::class, "editUserProfile"]);
+Route::post('/upload-profile-picture', [UserController::class, "uploadProfilePicture"]);
