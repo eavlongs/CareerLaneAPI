@@ -44,4 +44,12 @@ class ResponseHelper extends Controller
     {
         return self::buildErrorResponse($error, $message, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+
+    public static function unsetKeysFromData(object $data, array $keys)
+    {
+        foreach ($keys as $key) {
+            unset($data->$key);
+        }
+        return $data;
+    }
 }
