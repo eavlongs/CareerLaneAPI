@@ -35,6 +35,11 @@ class EnsureIsCompany
             return ResponseHelper::buildUnauthorizedResponse();
         }
 
+        // check if account is verified
+        if (!isset($account->email_verified_at)) {
+            return ResponseHelper::buildUnauthorizedResponse("Please verify your account first!");
+        }
+
         $request->merge(["_auth_company_id" => $company->id, "_auth_account_id" => $account->id]);
         return $next($request);
     }
