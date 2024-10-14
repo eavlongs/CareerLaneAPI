@@ -74,7 +74,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
         }
 
         $companyAccount = Account::create([
@@ -88,9 +88,9 @@ class AuthController extends Controller
         $token = str()->random(60);
         $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
         $emailVerifyToken =  EmailVerifyToken::create([
-        'token' => $token,
-        'account_id' => $companyAccount->id,
-        'expires_at' => $expiresAt,
+            'token' => $token,
+            'account_id' => $companyAccount->id,
+            'expires_at' => $expiresAt,
         ]);
         $company = Company::create([
             'name' => $request->company_name,
@@ -99,7 +99,7 @@ class AuthController extends Controller
             'province_id' => $request->province,
         ]);
 
-        
+
 
         return ResponseHelper::buildSuccessResponse([
             'account_id' => $companyAccount->id
@@ -305,12 +305,12 @@ class AuthController extends Controller
         $token = str()->random(60);
         $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
         $passwordForgotToken =  PasswordForgotToken::create([
-        'token' => $token,
-        'account_id' => $account_id,
-        'expires_at' => $expiresAt,
+            'token' => $token,
+            'account_id' => $account_id,
+            'expires_at' => $expiresAt,
         ]);
 
-        $forgotPasswordUrl = env('FRONTEND_URL') . '/forgot-password/'. $token;
+        $forgotPasswordUrl = env('FRONTEND_URL') . '/forgot-password/' . $token;
 
         Mail::to($request->email)->send(new ForgotPasswordEmail($forgotPasswordUrl));
 
@@ -339,7 +339,8 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse();
     }
 
-    public function forgotPassword(Request $request){
+    public function forgotPassword(Request $request)
+    {
         $validator = ValidatOR::make($request->all(), [
             'new_password' => 'required|string|min:8',
             'new_confirm_password' => 'required|string:same:new_password',
@@ -353,7 +354,7 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse();
     }
 
-    
+
 
 
     // functions required by Lucia

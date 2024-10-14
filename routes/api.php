@@ -62,7 +62,6 @@ Route::prefix('auth')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
-
 });
 
 Route::post('/send-verification-email', [AuthController::class, 'sendEmail']);

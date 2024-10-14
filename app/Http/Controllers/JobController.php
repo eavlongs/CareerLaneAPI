@@ -7,6 +7,7 @@ use App\Enums\LocationEnum;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPost;
+use App\Models\Province;
 use App\RequestHelper;
 use App\ResponseHelper;
 use App\QueryHelper;
@@ -156,6 +157,10 @@ class JobController extends Controller
             ->orderBy("created_at", "desc")
             ->get();
 
+        foreach ($jobs as $job) {
+            $job->logo_url = $company->logo_url;
+        }
+
         return ResponseHelper::buildSuccessResponse([
             "jobs" => $jobs
         ]);
@@ -170,6 +175,8 @@ class JobController extends Controller
         }
 
         $company = Company::where("id", $job->company_id)->first();
+        $province = Province::where("id", $company->province_id)->first();
+        $category = Category::where("id", $job->category_id)->first();
 
         return ResponseHelper::buildSuccessResponse([
             "job" => [
@@ -178,17 +185,20 @@ class JobController extends Controller
                 "description" => $job->description,
                 "location" => $job->location,
                 "type" => $job->type,
-                "salary" => $job->salary ??  [$job->salary_start_range, $job->salary_end_range],
+                "salary" => $job->salary,
+                "salary_start_range" => $job->salary_start_range,
+                "salary_end_range" => $job->salary_end_range,
                 "is_salary_negotiable" => $job->is_salary_negotiable,
                 "original_deadline" => $job->original_deadline,
-                "extended_deadline" => $job->extended_deadline,
+                "extended_deadline" => $job->extended_deadline ?? $job->original_deadline,
                 "is_active" => $job->is_active,
                 "applicants" => $job->applicants,
                 "company_id" => $job->company_id,
                 "category_id" => $job->category_id,
+                "category_name" => $category->name,
                 "company_name" => $company->name,
-                "logo" => $company->logo_url,
-                "company_location" => "Phnom Penh",
+                "logo_url" => $company->logo_url,
+                "company_location" => $province->name,
                 "created_at" => $job->created_at,
                 "updated_at" => $job->updated_at,
             ]
@@ -206,6 +216,7 @@ class JobController extends Controller
         $queryBuilder = JobPost::query();
 
         $queryBuilder->join("companies", "job_posts.company_id", "=", "companies.id");
+        $queryBuilder->join("provinces", "companies.province_id", "=", "provinces.id");
 
         if (isset($filterParams["p_id"])) {
             $queryBuilder->where("companies.province_id", $filterParams["p_id"]);
@@ -223,12 +234,19 @@ class JobController extends Controller
             $_queryBuilder->orWhereRaw("job_posts.description LIKE ? COLLATE utf8mb4_general_ci", ["%$query%"]);
         });
 
+        $queryBuilder->select("job_posts.*", "companies.logo_url", "companies.name as company_name", "provinces.name as company_location");
+
         QueryHelper::sort($queryBuilder, $sortParams, [
             "created_at" => "job_posts.created_at",
         ]);
         $metaData = QueryHelper::paginate($queryBuilder, $paginationParams);
 
         $jobs = $queryBuilder->get();
+
+        foreach ($jobs as $job) {
+            $keysToUnset = ["applicants", "category_id", "description", "original_deadline", "extended_deadline", "salary", "salary_start_range", "salary_end_range", "is_salary_negotiable"];
+            ResponseHelper::unsetKeysFromData($job, $keysToUnset);
+        }
 
         return ResponseHelper::buildSuccessResponse([
             "jobs" => $jobs,

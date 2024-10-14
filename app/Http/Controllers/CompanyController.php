@@ -22,5 +22,5 @@ class CompanyController extends Controller
 
     // public function getCompanies(Request $request) {
 
-    // }
+    // }a
 }
