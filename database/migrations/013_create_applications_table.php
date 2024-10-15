@@ -14,8 +14,9 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
-            $table->text("message");
+            // $table->text("message");
             $table->boolean("is_active")->default(true);
+            $table->string("cv_url");
             $table->foreignUuid("user_id")->constrained("users");
             $table->foreignUuid("job_post_id")->constrained("job_posts");
             $table->timestamps();

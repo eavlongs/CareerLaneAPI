@@ -11,7 +11,7 @@ class Application extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        "message",
+        "cv_url",
         "user_id",
         "job_post_id",
     ];
