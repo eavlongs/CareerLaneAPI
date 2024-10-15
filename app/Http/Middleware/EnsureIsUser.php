@@ -9,6 +9,7 @@ use App\Models\Session;
 use App\Models\Account;
 use App\ResponseHelper;
 use App\Models\User;
+use App\QueryHelper;
 
 class EnsureIsUser
 {
@@ -19,18 +20,8 @@ class EnsureIsUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $session_id = $request->cookie('auth_session');
-        $session = Session::firstWhere('id', $session_id);
-        if (!$session) {
-            return ResponseHelper::buildUnauthorizedResponse();
-        }
+        $user = QueryHelper::getUser($request);
 
-        $account = Account::firstWhere('id', $session->account_id);
-        if (!$account) {
-            return ResponseHelper::buildUnauthorizedResponse();
-        }
-
-        $user = User::firstWhere('account_id', $account->id);
         if (!$user) {
             return ResponseHelper::buildUnauthorizedResponse();
         }

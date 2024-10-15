@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\Session;
 use App\ResponseHelper;
 use App\Models\Company;
+use App\QueryHelper;
 
 class EnsureIsCompany
 {
@@ -19,19 +20,10 @@ class EnsureIsCompany
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $session_id = $request->cookie('auth_session');
-        $session = Session::firstWhere('id', $session_id);
-        if (!$session) {
-            return ResponseHelper::buildUnauthorizedResponse();
-        }
+        $account = QueryHelper::getAccount($request);
+        $company = QueryHelper::getCompany($request);
 
-        $account = Account::firstWhere('id', $session->account_id);
-        if (!$account) {
-            return ResponseHelper::buildUnauthorizedResponse();
-        }
-
-        $company = Company::firstWhere('account_id', $account->id);
-        if (!$company) {
+        if (!$account || !$company) {
             return ResponseHelper::buildUnauthorizedResponse();
         }
 

@@ -2,7 +2,12 @@
 
 namespace App;
 
+use Illuminate\Http\Request;
 use \Illuminate\Database\Eloquent\Builder;
+use App\Models\Session;
+use App\Models\Account;
+use App\Models\User;
+use App\Models\Company;
 
 class QueryHelper
 {
@@ -65,5 +70,47 @@ class QueryHelper
                 $queryBuilder->where($column, $operator, $value);
             }
         }
+    }
+
+    public static function getAccount(Request $request)
+    {
+        $session_id = $request->cookie('auth_session');
+        $session = Session::firstWhere('id', $session_id);
+        if (!$session) {
+            return null;
+        }
+
+        $account = Account::firstWhere('id', $session->account_id);
+        if (!$account) {
+            return null;
+        }
+
+        return $account;
+    }
+
+    public static function getUser(Request $request)
+    {
+        $account = self::getAccount($request);
+
+        if (!$account) {
+            return null;
+        }
+
+        $user = User::firstWhere('account_id', $account->id);
+
+        return $user;
+    }
+
+    public static function getCompany(Request $request)
+    {
+        $account = self::getAccount($request);
+
+        if (!$account) {
+            return null;
+        }
+
+        $company = Company::firstWhere('account_id', $account->id);
+
+        return $company;
     }
 }
