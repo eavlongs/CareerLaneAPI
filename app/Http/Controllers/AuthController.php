@@ -460,13 +460,11 @@ class AuthController extends Controller
             return ResponseHelper::buildValidationErrorResponse($validator->errors());
         }
 
-        $session = new Session([
+        $session = Session::create([
             "account_id" => $request->userId,
             "id" => $request->id,
             "expires_at" => Carbon::parse($request->expiresAt)
         ]);
-
-        $session->save();
 
         return ResponseHelper::buildSuccessResponse($session);
     }
