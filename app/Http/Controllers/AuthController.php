@@ -2,25 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProviderEnum;
+use App\Constants;
 use App\ENums\UserTypeEnum;
 use App\Mail\TestEmail;
 use App\FileHelper;
 use App\Mail\ForgotPasswordEmail;
-use App\Mail\ResetPasswordEmail;
 use App\Models\Account;
 use App\Models\AccountProvider;
 use App\Models\Company;
 use App\Models\EmailVerifyToken;
 use App\Models\PasswordForgotToken;
-use App\Models\PasswordResetToken;
 use App\Models\Provider;
 use App\Models\Session;
 use App\Models\User;
 use App\ResponseHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -69,7 +66,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:50|unique:accounts',  // Check 'email' uniqueness in 'accounts'
             'password' => 'required|string|min:8',
             'confirm_password' => 'required|string|same:password',
-            'logo' => 'required|image|mimes:jepg,jpg,png,webp|max:20480',
+            'logo' => 'required|image|mimes:jepg,jpg,png,webp|max:' . Constants::$MAX_FILE_SIZE,
             'province' => 'required|string|min:1|max:255'
         ]);
 

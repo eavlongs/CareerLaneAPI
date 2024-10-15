@@ -7,6 +7,7 @@ use App\Http\Controllers\GeneralController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureIsCompany;
+use App\Http\Middleware\EnsureIsUser;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,8 @@ Route::prefix("jobs")->group(function () {
     Route::get("/categories", [JobController::class, "getJobCategories"]);
     Route::get("/{id}", [JobController::class, 'getJob']);
     Route::get("/", [JobController::class, 'getJobs']);
+
+    Route::post("/{id}/apply", [JobController::class, 'applyJob'])->middleware(EnsureIsUser::class);
 });
 
 Route::prefix("companies")->group(function () {

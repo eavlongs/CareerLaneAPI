@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants;
 use App\Enums\JobTypeEnum;
 use App\Enums\LocationEnum;
+use App\FileHelper;
+use App\Models\Application;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPost;
@@ -177,6 +180,12 @@ class JobController extends Controller
         $company = Company::where("id", $job->company_id)->first();
         $province = Province::where("id", $company->province_id)->first();
         $category = Category::where("id", $job->category_id)->first();
+        $user = QueryHelper::getUser($request);
+        if ($user) {
+            $application = Application::where("job_post_id", $job->id)->where("user_id", $user->id)->first();
+        } else {
+            $application = null;
+        }
 
         return ResponseHelper::buildSuccessResponse([
             "job" => [
@@ -201,6 +210,7 @@ class JobController extends Controller
                 "company_location" => $province->name,
                 "created_at" => $job->created_at,
                 "updated_at" => $job->updated_at,
+                "applied" => isset($application)
             ]
         ]);
     }
@@ -272,5 +282,44 @@ class JobController extends Controller
         return ResponseHelper::buildSuccessResponse([
             "categories" => $categories
         ]);
+    }
+
+    public function applyJob(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "cv" => "required|file|mimes:pdf,doc,docx|max:" . Constants::$MAX_FILE_SIZE,
+        ], [
+            "cv.required" => "CV is required",
+            "cv.file" => "CV must be a file",
+            "cv.mimes" => "CV must be a file of type: pdf, doc, docx",
+            "cv.max" => "CV must not be greater than " . Constants::$MAX_FILE_SIZE . " KB",
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
+
+        $job = JobPost::where("id", $request->id)->first();
+        if ($job->extended_deadline) {
+            if (Carbon::now()->gt(Carbon::parse($job->extended_deadline))) {
+                return ResponseHelper::buildErrorResponse(null, "Sorry, we are no longer accepting applications for this job.");
+            }
+        } else {
+            if (Carbon::now()->gt(Carbon::parse($job->original_deadline))) {
+                return ResponseHelper::buildErrorResponse(null, "Sorry, we are no longer accepting applications for this job.");
+            }
+        }
+
+        // upload file to storage
+        $cv = $request->file("cv");
+        $cvFileName = FileHelper::saveFile($cv);
+
+        Application::create([
+            "job_post_id" => $request->id,
+            "user_id" => $request->_auth_user_id,
+            "cv_url" => $cvFileName,
+        ]);
+
+        return ResponseHelper::buildSuccessResponse();
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class FileHelper
 {
 
-    public static function saveFile($file, string $fileNamePrefix = "image_", string|null $fileToReplace = null): string
+    public static function saveFile($file, string|null $fileToReplace = null): string
     {
         // save file to the specified directory
         $path = Storage::disk('public')->put('', $file);
