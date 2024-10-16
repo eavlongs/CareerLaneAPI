@@ -314,11 +314,21 @@ class JobController extends Controller
         $cv = $request->file("cv");
         $cvFileName = FileHelper::saveFile($cv);
 
-        Application::create([
-            "job_post_id" => $request->id,
-            "user_id" => $request->_auth_user_id,
-            "cv_url" => $cvFileName,
-        ]);
+        $application = Application::where("job_post_id", $request->id)->where("user_id", $request->_auth_user_id)->first();
+
+        if ($application) {
+            $application->cv_url = $cvFileName;
+            $job->applicants = $job->applicants + 1;
+
+            $application->save();
+            $job->save();
+        } else {
+            Application::create([
+                "job_post_id" => $request->id,
+                "user_id" => $request->_auth_user_id,
+                "cv_url" => $cvFileName,
+            ]);
+        }
 
         return ResponseHelper::buildSuccessResponse();
     }
