@@ -77,3 +77,5 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/user-profile-information', [UserController::class, 'userProfileInformation']);
 Route::post('/edit-user-profile', [UserController::class, "editUserProfile"]);
 Route::post('/upload-profile-picture', [UserController::class, "uploadProfilePicture"]);
+
+Route::get('/company-profile', [CompanyController::class, 'companyProfileInformation'])->middleware(EnsureIsCompany::class);

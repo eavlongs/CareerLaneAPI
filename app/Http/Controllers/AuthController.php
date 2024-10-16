@@ -277,8 +277,9 @@ class AuthController extends Controller
         }
 
         $emailVerifyToken = EmailVerifyToken::where('token', $token)
-            ->where('expires_at', '>', Carbon::now())
-            ->first();
+        ->where('expires_at', '>', Carbon::now())
+        ->first();
+       
 
         if (!$emailVerifyToken) {
             $token = str()->random(60);
@@ -288,6 +289,18 @@ class AuthController extends Controller
             $emailVerifyToken->save();
             return ResponseHelper::buildErrorResponse("Token is expired Please Try Again", 404);
         }
+        $account = Account::where('id', $emailVerifyToken->account_id)->first();
+
+        if (!$account) {
+            return ResponseHelper::buildErrorResponse('Account not found');
+        }
+
+        $account->is_verify = true;
+        $account->email_verified_at = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
+        $account->save();
+
+        // $emailVerifyToken->delete();
+
         return ResponseHelper::buildSuccessResponse();
     }
 
