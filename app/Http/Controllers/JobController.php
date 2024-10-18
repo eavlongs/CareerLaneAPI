@@ -147,6 +147,7 @@ class JobController extends Controller
     public function getCompanyJobs(Request $request)
     {
         $isActive = $request->get("is_active", true);
+        $isActive = filter_var($isActive, FILTER_VALIDATE_BOOLEAN);
         $company_id = $request->company_id;
 
         $company = Company::where("id", $company_id)->first();
@@ -155,10 +156,29 @@ class JobController extends Controller
             return ResponseHelper::buildErrorResponse("Company not found");
         }
 
-        $jobs = JobPost::where("company_id", $company_id)
-            ->where("is_active", $isActive)
-            ->orderBy("created_at", "desc")
-            ->get();
+        $jobQuery = JobPost::where("company_id", $company_id)
+            ->orderBy("created_at", "desc");
+
+
+        $activeCondition = function ($query) {
+            $query->where("is_active", true);
+            $query->where(function ($_query) {
+                $_query->whereNull("extended_deadline")
+                    ->where("original_deadline", ">", Carbon::now());
+            })
+                ->orWhere(function ($_query) {
+                    $_query->whereNotNull("extended_deadline")
+                        ->where("extended_deadline", ">", Carbon::now());
+                });
+        };
+
+        if ($isActive) {
+            $jobQuery->where($activeCondition);
+        } else {
+            $jobQuery->whereNot($activeCondition);
+        }
+
+        $jobs = $jobQuery->get();
 
         foreach ($jobs as $job) {
             $job->logo_url = $company->logo_url;
@@ -181,6 +201,7 @@ class JobController extends Controller
         $province = Province::where("id", $company->province_id)->first();
         $category = Category::where("id", $job->category_id)->first();
         $user = QueryHelper::getUser($request);
+
         if ($user) {
             $application = Application::where("job_post_id", $job->id)->where("user_id", $user->id)->first();
         } else {
@@ -312,23 +333,89 @@ class JobController extends Controller
 
         // upload file to storage
         $cv = $request->file("cv");
-        $cvFileName = FileHelper::saveFile($cv);
 
         $application = Application::where("job_post_id", $request->id)->where("user_id", $request->_auth_user_id)->first();
 
         if ($application) {
+            $cvFileName = FileHelper::saveFile($cv, $application->cv_url);
             $application->cv_url = $cvFileName;
-            $job->applicants = $job->applicants + 1;
-
+            $application->updated_at = Carbon::now();
             $application->save();
-            $job->save();
         } else {
+            $cvFileName = FileHelper::saveFile($cv);
             Application::create([
                 "job_post_id" => $request->id,
                 "user_id" => $request->_auth_user_id,
                 "cv_url" => $cvFileName,
             ]);
+            $job->applicants = $job->applicants + 1;
+            $job->save();
         }
+
+        return ResponseHelper::buildSuccessResponse();
+    }
+
+    public function getJobApplications(Request $request)
+    {
+        $is_active = $request->get("is_active", true);
+        $is_active = filter_var($is_active, FILTER_VALIDATE_BOOLEAN);
+
+        $job = JobPost::where("id", $request->id)->first();
+        if (!$job) {
+            return ResponseHelper::buildNotFoundResponse("Job not found");
+        }
+
+        if ($job->company_id !== $request->_auth_company_id) {
+            return ResponseHelper::buildUnauthorizedResponse();
+        }
+
+        $applications = Application::where("job_post_id", $request->id)->where("is_active", $is_active)->get();
+
+        foreach ($applications as $application) {
+            ResponseHelper::unsetKeysFromData($application->user, ["account_id", "about_me", "created_at", "updated_at"]);
+            $application->setAttribute("user", $application->user);
+        }
+
+        return ResponseHelper::buildSuccessResponse([
+            "applications" => $applications,
+            "job" => [
+                "id" => $job->id,
+                "title" => $job->title,
+            ]
+        ]);
+    }
+
+    public function downloadApplication(Request $request)
+    {
+        $application = Application::where("id", $request->id)->first();
+        if (!$application) {
+            return ResponseHelper::buildNotFoundResponse("Application not found");
+        }
+
+        if ($request->_auth_company_id !== $application->jobPost->company_id) {
+            return ResponseHelper::buildUnauthorizedResponse();
+        }
+
+        $application->is_active = false;
+        $application->save();
+        // return ResponseHelper::buildSuccessResponse($application);
+
+        return response()->download($application->cv_url);
+    }
+
+    public function reviewApplication(Request $request)
+    {
+        $application = Application::where("id", $request->id)->first();
+        if (!$application) {
+            return ResponseHelper::buildNotFoundResponse("Application not found");
+        }
+
+        if ($request->_auth_company_id !== $application->jobPost->company_id) {
+            return ResponseHelper::buildUnauthorizedResponse();
+        }
+
+        $application->is_active = false;
+        $application->save();
 
         return ResponseHelper::buildSuccessResponse();
     }

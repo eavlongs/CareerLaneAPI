@@ -1,5 +1,6 @@
 <?php
 
+use App\FileHelper;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
@@ -38,6 +39,7 @@ Route::prefix("jobs")->group(function () {
     Route::get("/categories", [JobController::class, "getJobCategories"]);
     Route::get("/{id}", [JobController::class, 'getJob']);
     Route::get("/", [JobController::class, 'getJobs']);
+    Route::get("/{id}/applications", [JobController::class, 'getJobApplications'])->middleware(EnsureIsCompany::class);
 
     Route::post("/{id}/apply", [JobController::class, 'applyJob'])->middleware(EnsureIsUser::class);
 });
@@ -54,8 +56,6 @@ Route::prefix("provinces")->group(function () {
 Route::prefix("accounts")->group(function () {
     Route::get("/{account_id}/sessions", [AuthController::class, 'getUserSessions']);
 });
-
-
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -79,3 +79,9 @@ Route::post('/edit-user-profile', [UserController::class, "editUserProfile"]);
 Route::post('/upload-profile-picture', [UserController::class, "uploadProfilePicture"]);
 
 Route::get('/company-profile', [CompanyController::class, 'companyProfileInformation'])->middleware(EnsureIsCompany::class);
+
+
+Route::prefix("applications")->group(function () {
+    Route::get("/{id}/download", [JobController::class, 'downloadApplication'])->middleware(EnsureIsCompany::class);
+    Route::post("/{id}/review", [JobController::class, 'reviewApplication'])->middleware(EnsureIsCompany::class);
+});

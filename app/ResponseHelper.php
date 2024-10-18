@@ -16,7 +16,7 @@ class ResponseHelper extends Controller
         ], Response::HTTP_OK);
     }
 
-    public static function buildErrorResponse($error = null, $message = "An error occurred", $status = Response::HTTP_BAD_REQUEST)
+    public static function buildErrorResponse($message = "An error occurred", $status = Response::HTTP_BAD_REQUEST, $error = null)
     {
         return response()->json([
             'success' => false,
@@ -42,7 +42,7 @@ class ResponseHelper extends Controller
 
     public static function buildValidationErrorResponse($error = null, $message = "Validation Error")
     {
-        return self::buildErrorResponse($error, $message, Response::HTTP_UNPROCESSABLE_ENTITY);
+        return self::buildErrorResponse($message, Response::HTTP_UNPROCESSABLE_ENTITY, $error);
     }
 
     public static function unsetKeysFromData(object $data, array $keys)
