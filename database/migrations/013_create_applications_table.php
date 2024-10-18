@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string("cv_url");
             $table->foreignUuid("user_id")->constrained("users");
             $table->foreignUuid("job_post_id")->constrained("job_posts");
+            $table->unique(["user_id", "job_post_id"]);
             $table->timestamps();
         });
     }

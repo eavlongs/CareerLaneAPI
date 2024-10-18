@@ -15,4 +15,14 @@ class Application extends Model
         "user_id",
         "job_post_id",
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function jobPost()
+    {
+        return $this->belongsTo(JobPost::class);
+    }
 }

@@ -21,12 +21,10 @@ class FileHelper
         return self::joinPaths("storage", "uploads", $path);
     }
 
-    public static function deleteFile(string $fileName, string $fileDirectoryEnv = 'FILE_UPLOAD_DIR'): void
+    public static function deleteFile(string $fileName): void
     {
-        $fileDirectory = env($fileDirectoryEnv);
-
-        if (Storage::disk('public')->exists(self::joinPaths($fileDirectory, $fileName))) {
-            Storage::disk('public')->delete(self::joinPaths($fileDirectory, $fileName));
+        if (Storage::disk('public')->exists(self::joinPaths($fileName))) {
+            Storage::disk('public')->delete(self::joinPaths($fileName));
         }
     }
 
