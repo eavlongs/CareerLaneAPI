@@ -3,7 +3,6 @@
 namespace App;
 
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class FileHelper
 {
@@ -21,15 +20,26 @@ class FileHelper
         return self::joinPaths("storage", "uploads", $path);
     }
 
-    public static function deleteFile(string $fileName): void
+    public static function deleteFile(string $fileName)
     {
-        if (Storage::disk('public')->exists(self::joinPaths($fileName))) {
-            Storage::disk('public')->delete(self::joinPaths($fileName));
+        $fileName = self::removeFilePrefix($fileName);
+        if (Storage::disk("public")->exists($fileName)) {
+            Storage::disk("public")->delete($fileName);
         }
     }
 
     public static function joinPaths(string ...$paths): string
     {
         return preg_replace('~[/\\\\]+~', DIRECTORY_SEPARATOR, implode(DIRECTORY_SEPARATOR, $paths));
+    }
+
+    public static function exists(string $fileName): bool
+    {
+        return Storage::disk("public")->exists(self::removeFilePrefix($fileName));
+    }
+
+    public static function removeFilePrefix(string $fileName)
+    {
+        return str_replace("storage" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR, "", $fileName);
     }
 }
