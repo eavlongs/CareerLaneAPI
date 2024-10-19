@@ -22,7 +22,7 @@ class CompanyController extends Controller
             "companies" => $featuredCompanies
         ]);
     }
-    public function companyProfileInformation(Request $request)
+    public function companyInformation(Request $request)
 {
     $sessionId = $request->cookie('auth_session');
     $session = Session::where('id', $sessionId)->first();
@@ -43,7 +43,9 @@ class CompanyController extends Controller
         'is_verify' => $account->is_verify,
     ]);
 }
-    // public function getCompanies(Request $request) {
+    public function getAllCompanies(Request $request) {
+        $companies = Company::all();
 
-    // }a
+        return ResponseHelper::buildSuccessResponse($companies);
+    }
 }
