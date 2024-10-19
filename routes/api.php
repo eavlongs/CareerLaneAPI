@@ -65,23 +65,21 @@ Route::prefix('auth')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
+    Route::post('/send-verification-email', [AuthController::class, 'sendEmail']);
+    Route::post('/verify-token', [AuthController::class, 'verifyToken']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
+    Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 });
 
-Route::post('/send-verification-email', [AuthController::class, 'sendEmail']);
-Route::post('/verify-token', [AuthController::class, 'verifyToken']);
-Route::post('/change-password', [AuthController::class, 'changePassword']);
-Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
-Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::prefix('user')->group(function () {
+    Route::get('/profile-information', [UserController::class, 'userProfileInformation']);
+    Route::post('/edit-profile', [UserController::class, "editUserProfile"]);
+    Route::post('/upload-profile-picture', [UserController::class, "uploadProfilePicture"]);
+});
 
-Route::get('/user-profile-information', [UserController::class, 'userProfileInformation']);
-Route::post('/edit-user-profile', [UserController::class, "editUserProfile"]);
-Route::post('/upload-profile-picture', [UserController::class, "uploadProfilePicture"]);
-
-Route::get('/company-profile', [CompanyController::class, 'companyProfileInformation'])->middleware(EnsureIsCompany::class);
-
-
-Route::prefix("applications")->group(function () {
-    Route::get("/{id}/download", [JobController::class, 'downloadApplication'])->middleware(EnsureIsCompany::class);
-    Route::post("/{id}/review", [JobController::class, 'reviewApplication'])->middleware(EnsureIsCompany::class);
+Route::prefix('company')->middleware(EnsureIsCompany::class)->group(function () {
+    Route::get('/information', [CompanyController::class, 'companyInformation']);
+    Route::get('/all', [CompanyController::class, 'getAllCompanies']);
 });
