@@ -71,6 +71,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
     Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+
+    Route::post('/link-account', [AuthController::class, 'linkAccount'])->middleware(EnsureIsCompany::class);
 });
 
 Route::prefix('user')->group(function () {

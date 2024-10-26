@@ -18,4 +18,9 @@ class Account extends Model
     protected $hidden = [
         "password"
     ];
+
+    public function accountProviders()
+    {
+        return $this->hasMany(AccountProvider::class);
+    }
 }

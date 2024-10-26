@@ -18,6 +18,7 @@ use App\Models\User;
 use App\ResponseHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -38,7 +39,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
         }
 
         $userAccount = Account::create([
@@ -157,7 +158,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseHelper::buildErrorResponse(); // use ResponseHelper
+            return ResponseHelper::buildValidationErrorResponse($validator->errors()); // use ResponseHelper
         }
 
         $existingProvider = Provider::where('provider', $request->provider) // check provider = $request->provider
@@ -277,9 +278,9 @@ class AuthController extends Controller
         }
 
         $emailVerifyToken = EmailVerifyToken::where('token', $token)
-        ->where('expires_at', '>', Carbon::now())
-        ->first();
-       
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
 
         if (!$emailVerifyToken) {
             $token = str()->random(60);
@@ -364,8 +365,44 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse();
     }
 
+    public function linkAccount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'provider' => 'required|int', // value must be in ProviderEnum range
+            'provider_id' => 'required|string', // limit length
+            'provider_account_profile' => 'string' // limit length
+        ]);
 
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors()); // use ResponseHelper
+        }
 
+        $accountProvider = AccountProvider::where('provider_id')->first();
+
+        if ($accountProvider) {
+            if ($accountProvider->account_id === $request->_auth_account_id)
+                return ResponseHelper::buildSuccessResponse(message: "Account is already linked with the provider.");
+            return ResponseHelper::buildErrorResponse('Account is already been used.');
+        }
+
+        try {
+            DB::transaction(function () use ($request) {
+                $provider = Provider::create([
+                    'provider' => $request->provider,
+                    'id_from_provider' => $request->provider_id,
+                    'provider_account_profile' => $request->provider_account_profile,
+                ]);
+
+                $accountProvider = AccountProvider::create([
+                    'account_id' => $request->_auth_account_id,
+                    'provider_id' => $provider->id,
+                ]);
+            });
+            return ResponseHelper::buildSuccessResponse(message: "Successfully linked account to provider.");
+        } catch (\Exception $e) {
+            return ResponseHelper::buildErrorResponse('Failed to link account');
+        }
+    }
 
     // functions required by Lucia
     public function getSessionAndUser(Request $request)
@@ -390,12 +427,18 @@ class AuthController extends Controller
             if (!$company) {
                 return ResponseHelper::buildErrorResponse("User not found", 404);
             }
+            $providersLinked = [];
+            foreach ($account->accountProviders as $accountProvider) {
+                array_push($providersLinked, $accountProvider->provider->provider);
+            }
+
             $userToBeReturned = [
                 "id" => $company->id,
                 "account_id" => $company->account_id,
                 "avatar_url" => $company->logo_url,
                 "role" => UserTypeEnum::COMPANY,
                 "company_name" => $company->name,
+                "providers_linked" => $providersLinked
             ];
         } else {
             $userToBeReturned = [
@@ -414,8 +457,6 @@ class AuthController extends Controller
         ]);
     }
 
-
-
     public function getUserSessions(Request $request)
     {
         $account_id = $request->account_id;
@@ -427,14 +468,13 @@ class AuthController extends Controller
 
         $userToBeReturned = [];
 
-
-
         $user = User::where('account_id', $account->id)->first();
         if (!$user) {
             $company = Company::where('account_id', $account->id)->first();
             if (!$company) {
                 return ResponseHelper::buildErrorResponse("User not found", 404);
             }
+
             $userToBeReturned = [
                 "id" => $company->id,
                 "account_id" => $company->account_id,

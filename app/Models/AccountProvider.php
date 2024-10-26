@@ -14,4 +14,9 @@ class AccountProvider extends Model
         "provider_id",
         "account_id"
     ];
+
+    public function provider()
+    {
+        return $this->belongsTo(Provider::class);
+    }
 }

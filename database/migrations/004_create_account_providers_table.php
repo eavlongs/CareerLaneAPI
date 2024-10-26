@@ -16,6 +16,10 @@ return new class extends Migration
             $table->uuid("id")->primary()->default(DB::raw("(UUID())"));
             $table->foreignUuid('account_id')->constrained('accounts')->onDelete('cascade');
             $table->foreignUuid('provider_id')->constrained('providers');
+            $table->unique([
+                "account_id",
+                "provider_id"
+            ]);
             $table->timestamps();
         });
     }

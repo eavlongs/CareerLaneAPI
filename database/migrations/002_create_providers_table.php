@@ -19,6 +19,10 @@ return new class extends Migration
             $table->integer('provider');
             $table->string('id_from_provider');
             $table->string("provider_account_profile")->nullable();
+            $table->unique([
+                "provider",
+                "id_from_provider"
+            ]);
             $table->timestamps();
         });
     }
