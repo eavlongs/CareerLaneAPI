@@ -83,20 +83,12 @@ class AuthController extends Controller
         $logo = $request->file('logo');
         $logoFileName = FileHelper::saveFile($logo);
 
-        $token = str()->random(60);
-        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
 
         Company::create([
             'name' => $request->company_name,
             'account_id' => $companyAccount->id,
             'logo_url' => $logoFileName,
             'province_id' => $request->province,
-        ]);
-
-        EmailVerifyToken::create([
-            'token' => $token,
-            'account_id' => $companyAccount->id,
-            'expires_at' => $expiresAt,
         ]);
 
         return ResponseHelper::buildSuccessResponse([
@@ -232,20 +224,42 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse('Password Changed');
     }
 
-    public function user(Request $request)
-    {
-        return $request->user();
-    }
-
     public function sendEmail(Request $request)
     {
         $account_id = $request->_auth_account_id;
-
-        $accountVerify = EmailVerifyToken::where('account_id', $account_id)->first();
-
-        $token = $accountVerify->token;
-
         $account = Account::where('id', $account_id)->first();
+
+        if ($account->email_verified_at) {
+            return ResponseHelper::buildErrorResponse('Email is already verified');
+        }
+
+        $existingTokens = EmailVerifyToken::where('account_id', $account_id)->get();
+
+        if ($existingTokens) {
+            $isTokenIssuedRecently = false;
+            $timeToWaitInSeconds = 0;
+            foreach ($existingTokens as $token) {
+                if (Carbon::now()->isBefore(Carbon::parse($token->created_at)->addMinutes(5))) {
+                    $isTokenIssuedRecently = true;
+                    $timeToWaitInSeconds = Carbon::parse($token->created_at)->addMinutes(5)->diffInSeconds(Carbon::now());
+                    break;
+                }
+            }
+        }
+
+        if ($isTokenIssuedRecently) {
+            return ResponseHelper::buildErrorResponse('Email has recently been sent. Please wait for ' . $timeToWaitInSeconds . ' seconds');
+        }
+
+        $token = str()->random(30);
+        $expiresAt = Carbon::now()->addHour()->format('Y-m-d H:i:s');
+
+        EmailVerifyToken::create([
+            'token' => $token,
+            'account_id' => $account_id,
+            'expires_at' => $expiresAt,
+        ]);
+
         $email = $account->email;
 
         $verificationUrl = \config('env.frontend_url') . '/verify-email/token=' . $token;
@@ -254,6 +268,7 @@ class AuthController extends Controller
 
         return ResponseHelper::buildSuccessResponse();
     }
+
 
     public function verifyToken(Request $request)
     {

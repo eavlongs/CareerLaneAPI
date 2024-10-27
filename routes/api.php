@@ -62,7 +62,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/register-company', [AuthController::class, 'registerCompany']);
     Route::post('/login', [AuthController::class, 'login']);
     // Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
     Route::post('/send-verification-email', [AuthController::class, 'sendEmail'])->middleware('company:false');

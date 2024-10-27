@@ -21,7 +21,7 @@ class ResponseHelper extends Controller
         return response()->json([
             'success' => false,
             'message' => $message,
-            'error' => $error
+            'error' => $error,
         ], $status);
     }
 
