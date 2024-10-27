@@ -61,7 +61,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/register-company', [AuthController::class, 'registerCompany']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    // Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
@@ -73,6 +73,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
     Route::post('/link-account', [AuthController::class, 'linkAccount'])->middleware(EnsureIsCompany::class);
+    Route::post('/delete-account', [AuthController::class, 'deleteAccount'])->middleware(EnsureIsCompany::class);
 });
 
 Route::prefix('user')->group(function () {

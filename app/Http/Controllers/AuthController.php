@@ -85,19 +85,19 @@ class AuthController extends Controller
 
         $token = str()->random(60);
         $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
-        $emailVerifyToken =  EmailVerifyToken::create([
-            'token' => $token,
-            'account_id' => $companyAccount->id,
-            'expires_at' => $expiresAt,
-        ]);
-        $company = Company::create([
+
+        Company::create([
             'name' => $request->company_name,
             'account_id' => $companyAccount->id,
             'logo_url' => $logoFileName,
             'province_id' => $request->province,
         ]);
 
-
+        EmailVerifyToken::create([
+            'token' => $token,
+            'account_id' => $companyAccount->id,
+            'expires_at' => $expiresAt,
+        ]);
 
         return ResponseHelper::buildSuccessResponse([
             'account_id' => $companyAccount->id
@@ -118,7 +118,6 @@ class AuthController extends Controller
         $existingAccount = Account::where('email', strtolower($request->email))->first();
 
         if (!$existingAccount) {
-            Hash::make($request->password);
             return ResponseHelper::buildErrorResponse('Incorrect username or password', 400);
         }
 
@@ -126,22 +125,9 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse('Incorrect username or password', 400);
         }
 
-
-        if (! $existingAccount || ! Hash::check($request->password, $existingAccount->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
         return ResponseHelper::buildSuccessResponse([
             'account_id' => $existingAccount->id
         ]);
-    }
-
-    public function logout(Request $request)
-    {
-
-        return ResponseHelper::buildSuccessResponse();
     }
 
     public function loginProvider(Request $request)
@@ -377,23 +363,29 @@ class AuthController extends Controller
             return ResponseHelper::buildValidationErrorResponse($validator->errors()); // use ResponseHelper
         }
 
-        $accountProvider = AccountProvider::where('provider_id')->first();
+        $provider = Provider::where('provider', $request->provider)
+            ->where('id_from_provider', $request->provider_id)
+            ->first();
 
-        if ($accountProvider) {
-            if ($accountProvider->account_id === $request->_auth_account_id)
-                return ResponseHelper::buildSuccessResponse(message: "Account is already linked with the provider.");
-            return ResponseHelper::buildErrorResponse('Account is already been used.');
+        if ($provider) {
+            $accountProvider = AccountProvider::where("provider_id", $provider->id)->first();
+
+            if ($accountProvider) {
+                if ($accountProvider->account_id === $request->_auth_account_id)
+                    return ResponseHelper::buildSuccessResponse(message: "Account is already linked with the provider.");
+                else return ResponseHelper::buildErrorResponse('Account is already been used.');
+            }
         }
 
         try {
             DB::transaction(function () use ($request) {
-                $provider = Provider::create([
+                $provider = Provider::updateOrCreate([
                     'provider' => $request->provider,
                     'id_from_provider' => $request->provider_id,
                     'provider_account_profile' => $request->provider_account_profile,
                 ]);
 
-                $accountProvider = AccountProvider::create([
+                AccountProvider::create([
                     'account_id' => $request->_auth_account_id,
                     'provider_id' => $provider->id,
                 ]);
@@ -402,6 +394,18 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return ResponseHelper::buildErrorResponse('Failed to link account');
         }
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $account = Account::where('id', $request->_auth_account_id)->first();
+        if (!$account) {
+            return ResponseHelper::buildErrorResponse('Account not found', 404);
+        }
+
+        $account->delete();
+
+        return ResponseHelper::buildSuccessResponse();
     }
 
     // functions required by Lucia
