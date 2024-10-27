@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Constants;
 use App\ENums\UserTypeEnum;
-use App\Mail\TestEmail;
+use App\Mail\VerifyEmail;
 use App\FileHelper;
 use App\Mail\ForgotPasswordEmail;
 use App\Models\Account;
@@ -248,9 +248,9 @@ class AuthController extends Controller
         $account = Account::where('id', $account_id)->first();
         $email = $account->email;
 
-        $verificationUrl = env('FRONTEND_URL') . '/verify-email/token=' . $token;
+        $verificationUrl = \config('env.frontend_url') . '/verify-email/token=' . $token;
 
-        Mail::to($email)->send(new TestEmail($verificationUrl));
+        Mail::to($email)->send(new VerifyEmail($verificationUrl));
 
         return ResponseHelper::buildSuccessResponse();
     }
@@ -306,7 +306,7 @@ class AuthController extends Controller
             'expires_at' => $expiresAt,
         ]);
 
-        $forgotPasswordUrl = env('FRONTEND_URL') . '/forgot-password/' . $token;
+        $forgotPasswordUrl = \config() . '/forgot-password/' . $token;
 
         Mail::to($request->email)->send(new ForgotPasswordEmail($forgotPasswordUrl));
 
