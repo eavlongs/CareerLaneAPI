@@ -18,8 +18,10 @@ class EnsureIsCompany
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $checkVerificationStr = 'true'): Response
     {
+        $checkVerification = filter_var($checkVerificationStr, FILTER_VALIDATE_BOOLEAN);
+
         $account = QueryHelper::getAccount($request);
         $company = QueryHelper::getCompany($request);
 
@@ -28,7 +30,7 @@ class EnsureIsCompany
         }
 
         // check if account is verified
-        if (!isset($account->email_verified_at)) {
+        if ($checkVerification && !isset($account->email_verified_at)) {
             return ResponseHelper::buildUnauthorizedResponse("Please verify your account first!");
         }
 

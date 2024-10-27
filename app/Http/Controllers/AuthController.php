@@ -239,10 +239,10 @@ class AuthController extends Controller
 
     public function sendEmail(Request $request)
     {
-        $sessionId = $request->cookie('auth_session');
-        $session = Session::where('id', $sessionId)->first();
-        $account_id = $session->account_id;
+        $account_id = $request->_auth_account_id;
+
         $accountVerify = EmailVerifyToken::where('account_id', $account_id)->first();
+
         $token = $accountVerify->token;
 
         $account = Account::where('id', $account_id)->first();
@@ -282,7 +282,6 @@ class AuthController extends Controller
             return ResponseHelper::buildErrorResponse('Account not found');
         }
 
-        $account->is_verify = true;
         $account->email_verified_at = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
         $account->save();
 
@@ -442,7 +441,8 @@ class AuthController extends Controller
                 "avatar_url" => $company->logo_url,
                 "role" => UserTypeEnum::COMPANY,
                 "company_name" => $company->name,
-                "providers_linked" => $providersLinked
+                "providers_linked" => $providersLinked,
+                "is_verified" => $account->email_verified_at ? true : false
             ];
         } else {
             $userToBeReturned = [

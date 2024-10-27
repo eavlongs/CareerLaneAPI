@@ -65,7 +65,7 @@ Route::prefix('auth')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
-    Route::post('/send-verification-email', [AuthController::class, 'sendEmail']);
+    Route::post('/send-verification-email', [AuthController::class, 'sendEmail'])->middleware('company:false');
     Route::post('/verify-token', [AuthController::class, 'verifyToken']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
