@@ -65,11 +65,11 @@ Route::prefix('auth')->group(function () {
 
     Route::post('/login/provider', [AuthController::class, 'loginProvider']);
     Route::post('/send-verification-email', [AuthController::class, 'sendEmail'])->middleware('company:false');
-    Route::post('/verify-token', [AuthController::class, 'verifyToken']);
+    Route::get('/verify-token', [AuthController::class, 'verifyToken']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
-    Route::post('/send-forgot-password-email', [AuthController::class, 'sendForgotPasswordEmail']);
-    Route::post('/verify-forgot-password-token', [AuthController::class, 'verifyForgotPasswordToken']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/send-reset-password-email', [AuthController::class, 'sendResetPasswordEmail']);
+    Route::get('/verify-reset-password-token/{token}', [AuthController::class, 'verifyResetPasswordToken']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
     Route::post('/link-account', [AuthController::class, 'linkAccount'])->middleware(EnsureIsCompany::class);
     Route::post('/delete-account', [AuthController::class, 'deleteAccount'])->middleware(EnsureIsCompany::class);

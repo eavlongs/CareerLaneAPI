@@ -27,7 +27,7 @@ class ForgotPasswordEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Forgot Password Email',
+            subject: 'Request to reset password',
         );
     }
 
@@ -37,8 +37,8 @@ class ForgotPasswordEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'email.forgot-password',
-            with: ['forgotPasswordUrl' => $this->forgotPasswordUrl]
+            markdown: 'email.forgot-password',
+            with: ['forgotPasswordUrl' => $this->forgotPasswordUrl, 'appName' => 'CareerLane'],
         );
     }
 

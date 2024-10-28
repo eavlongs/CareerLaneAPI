@@ -124,7 +124,6 @@ class AuthController extends Controller
 
     public function loginProvider(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'provider' => 'required|int', // value must be in ProviderEnum range
             'provider_id' => 'required|string', // limit length
@@ -239,7 +238,7 @@ class AuthController extends Controller
             $isTokenIssuedRecently = false;
             $timeToWaitInSeconds = 0;
             foreach ($existingTokens as $token) {
-                if (Carbon::now()->isBefore(Carbon::parse($token->created_at)->addMinutes(5))) {
+                if ($token->is_active && Carbon::now()->isBefore(Carbon::parse($token->created_at)->addMinutes(5))) {
                     $isTokenIssuedRecently = true;
                     $timeToWaitInSeconds = Carbon::parse($token->created_at)->addMinutes(5)->diffInSeconds(Carbon::now());
                     break;
@@ -248,7 +247,7 @@ class AuthController extends Controller
         }
 
         if ($isTokenIssuedRecently) {
-            return ResponseHelper::buildErrorResponse('Email has recently been sent. Please wait for ' . $timeToWaitInSeconds . ' seconds');
+            return ResponseHelper::buildErrorResponse('Email has recently been sent. Please try again in ' . $timeToWaitInSeconds . ' seconds');
         }
 
         $token = str()->random(30);
@@ -305,62 +304,117 @@ class AuthController extends Controller
         return ResponseHelper::buildSuccessResponse();
     }
 
-    public function sendForgotPasswordEmail(Request $request)
+    public function sendResetPasswordEmail(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
+        $validator = $lowerCasedEmail = strtolower($request->email);
+        $validator = Validator::make([...$request->all(), "email" => $lowerCasedEmail], [
+            'email' => 'required|string|email|max:50',  // Check 'email' uniqueness in 'accounts'
         ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
+
         $account = Account::where('email', $request->email)->first();
+
+        if (!$account) {
+            return ResponseHelper::buildErrorResponse('Account not found', 404);
+        }
+
         $account_id = $account->id;
 
-        $token = str()->random(60);
-        $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
-        $passwordForgotToken =  PasswordForgotToken::create([
+        $existingTokens = PasswordForgotToken::where('account_id', $account_id)->get();
+
+        if ($existingTokens) {
+            $isTokenIssuedRecently = false;
+            $timeToWaitInSeconds = 0;
+            foreach ($existingTokens as $token) {
+                if (Carbon::now()->isBefore(Carbon::parse($token->created_at)->addMinutes(5))) {
+                    $isTokenIssuedRecently = true;
+                    $timeToWaitInSeconds = Carbon::parse($token->created_at)->addMinutes(5)->diffInSeconds(Carbon::now());
+                    break;
+                }
+            }
+        }
+
+        if ($isTokenIssuedRecently) {
+            return ResponseHelper::buildErrorResponse('Email has recently been sent. Please try again in ' . $timeToWaitInSeconds . ' seconds');
+        }
+
+        $token = str()->random(30);
+        $expiresAt = Carbon::now()->addHour()->format('Y-m-d H:i:s');
+        PasswordForgotToken::create([
             'token' => $token,
             'account_id' => $account_id,
             'expires_at' => $expiresAt,
         ]);
 
-        $forgotPasswordUrl = \config() . '/forgot-password/' . $token;
+        $forgotPasswordUrl = \config('env.frontend_url') . '/forgot-password/' . $token;
 
         Mail::to($request->email)->send(new ForgotPasswordEmail($forgotPasswordUrl));
 
         return ResponseHelper::buildSuccessResponse();
     }
 
-    public function verifyForgotPasswordToken(Request $request)
+    public function verifyResetPasswordToken(Request $request)
     {
         $token = $request->token;
-        if (!$token) {
-            return ResponseHelper::buildErrorResponse('Invalid Token', 404);
-        }
-
         $passwordForgotToken = PasswordForgotToken::where('token', $token)
-            ->where('expires_at', '>', Carbon::now())
             ->first();
 
         if (!$passwordForgotToken) {
-            $token = str()->random(60);
-            $expiresAt = Carbon::now()->addMonth()->format('Y-m-d H:i:s');
-            $passwordForgotToken->token = $token;
-            $passwordForgotToken->expires_at = $expiresAt;
-            $passwordForgotToken->save();
+            return ResponseHelper::buildNotFoundResponse("Invalid Token");
+        }
+        if (Carbon::now()->isAfter(Carbon::parse($passwordForgotToken->expires_at))) {
+            return ResponseHelper::buildErrorResponse("Token is expired.");
+        }
+        if (!$passwordForgotToken->is_active) {
+            return ResponseHelper::buildErrorResponse("Token has already been used");
+        }
+        if (!$passwordForgotToken) {
             return ResponseHelper::buildErrorResponse("Token is expired Please Try Again", 404);
         }
         return ResponseHelper::buildSuccessResponse();
     }
 
-    public function forgotPassword(Request $request)
+    public function resetPassword(Request $request)
     {
-        $validator = ValidatOR::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'new_password' => 'required|string|min:8',
             'new_confirm_password' => 'required|string:same:new_password',
             'token' => 'required|string',
         ]);
+        if ($validator->fails()) {
+            return ResponseHelper::buildValidationErrorResponse($validator->errors());
+        }
+
         $passwordForgotToken = PasswordForgotToken::where('token', $request->token)->first();
+
+        if (!$passwordForgotToken) {
+            return ResponseHelper::buildErrorResponse('Invalid Token', 404);
+        }
+
+        if (Carbon::now()->isAfter(Carbon::parse($passwordForgotToken->expires_at))) {
+            return ResponseHelper::buildErrorResponse("Token is expired.");
+        }
+
+        if (!$passwordForgotToken->is_active) {
+            return ResponseHelper::buildErrorResponse("Token has already been used");
+        }
+
         $account = Account::where('id', $passwordForgotToken->account_id)->first();
-        $account->password = Hash::make($request->new_password);
-        $account->save();
+
+        try {
+            DB::Transaction(function () use ($request, $account, $passwordForgotToken) {
+                $account->password = Hash::make($request->new_password);
+                $account->save();
+
+                $passwordForgotToken->is_active = false;
+                $passwordForgotToken->save();
+            });
+        } catch (\Exception $e) {
+            return ResponseHelper::buildErrorResponse($e->getMessage());
+        }
 
         return ResponseHelper::buildSuccessResponse();
     }

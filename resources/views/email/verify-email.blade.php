@@ -70,7 +70,7 @@
             <p>Best regards,<br>The {{ $appName }} Team</p>
         </div>
         <div class="footer">
-            <p>This is an automated message, please do not reply to this email. If you need assistance, please contact our support team.</p>
+            <p>This is an automated message, please do not reply to this email.</p>
         </div>
     </div>
 </body>
